@@ -1,0 +1,4 @@
+etc/default
+etc/init.d
+usr/sbin
+usr/share/snmp/mibs

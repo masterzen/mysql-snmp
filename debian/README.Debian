@@ -1,0 +1,11 @@
+mysql-snmp for Debian
+---------------------
+
+Snmp should allow AgentX.
+This can be done by adding:
+
+master agentx
+
+into /etc/snmp/snmpd.conf and reloading snmpd
+
+ -- brice <brice+debian@daysofwonder.com>  Thu, 17 Jul 2008 15:45:19 +0200

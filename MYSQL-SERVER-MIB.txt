@@ -1,0 +1,935 @@
+-- MySQL Server: SNMP Subagent
+-- 
+-- Copyright (C) 2008,2009 Brice Figureau
+-- Copyright (C) 2008,2009 Days of Wonder, Inc.
+--
+-- This program is free software; you can redistribute it and/or
+-- modify it under the terms of the GNU General Public License
+-- as published by the Free Software Foundation; either version 2
+-- of the License, or (at your option) any later version.
+-- 
+-- This program is distributed in the hope that it will be useful,
+-- but WITHOUT ANY WARRANTY; without even the implied warranty of
+-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-- GNU General Public License for more details.
+-- 
+-- You should have received a copy of the GNU General Public License
+-- along with this program; if not, write to the Free Software
+-- Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+--
+
+MYSQL-SERVER-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
+    enterprises, Counter32, Gauge32,
+    IpAddress, Unsigned32, Counter64
+    FROM SNMPv2-SMI
+
+    TEXTUAL-CONVENTION, DisplayString, TimeStamp,
+    TruthValue
+    FROM SNMPv2-TC
+
+    CounterBasedGauge64
+    FROM HCNUM-TC
+
+    MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+    FROM SNMPv2-CONF;
+
+mySQL		MODULE-IDENTITY
+    LAST-UPDATED "200807140000Z"	-- Jul. 14, 2008
+    ORGANIZATION "Days of Wonder, Inc."
+    CONTACT-INFO
+    "Days of Wonder
+    334 State Street, Suite 203
+    Los Altos, CA 94022
+    USA"
+    DESCRIPTION
+    "This MIB describes a MySQL Database Server counters."
+
+    REVISION "200807140000Z"	    -- Jul. 14, 2008
+    DESCRIPTION
+    "The original version of this MIB."
+    ::= { enterprises 20267 200 }
+
+-- Current MySQL core MIB entries
+--  myStatus		OBJECT IDENTIFIER ::= { mySQL 1 }
+
+myStatus		OBJECT IDENTIFIER ::= { mySQL 1 }
+
+myKeyReadRequests OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "The number of requests to read a key block
+  	 from the cache."
+    ::= { myStatus 1 }
+
+myKeyReads OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "The number of physical reads of a key
+  	 block from disk."
+    ::= { myStatus 2 }
+
+myKeyWriteRequests OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "The number of requests to write a key
+  	 block to the cache."
+    ::= { myStatus 3 }
+
+myKeyWrites OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "The number of physical writes of a key
+  	 block to disk."
+    ::= { myStatus 4 }
+
+myHistoryList OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB transaction history list length"
+    ::= { myStatus 5 }
+
+myInnodbTransactions OBJECT-TYPE
+    SYNTAX	Counter64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB transactions numbers"
+    ::= { myStatus 6 }
+
+myReadViews OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "read views open inside InnoDB"
+    ::= { myStatus 7 }
+
+myCurrentTransactions OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Innodb number of transactions at one time"
+    ::= { myStatus 8 }
+
+myLockedTransactions OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Innodb number of locked transactions at one time"
+    ::= { myStatus 9 }
+
+myActiveTransactions OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Innodb number of active transactions at one time"
+    ::= { myStatus 10 }
+
+myPoolSize OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Buffer Pool Size (pages)"
+    ::= { myStatus 11 }
+
+myFreePages OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Free pages in Buffer Pool Size"
+    ::= { myStatus 12 }
+
+myDatabasePages OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Page used for Database"
+    ::= { myStatus 13 }
+
+myModifiedPages OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB pages modified in Buffer Pool"
+    ::= { myStatus 14 }
+
+myPagesRead OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB pages read"
+    ::= { myStatus 15 }
+
+myPagesCreated OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB pages created"
+    ::= { myStatus 16 }
+
+myPagesWritten OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB pages written"
+    ::= { myStatus 17 }
+
+myFileFsyncs OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB fsyncs"
+    ::= { myStatus 18 }
+
+myFileReads OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB fread"
+    ::= { myStatus 19 }
+
+myFileWrites OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB fwrite"
+    ::= { myStatus 20 }
+
+myLogWrites OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB log writes"
+    ::= { myStatus 21 }
+
+myPendingAIOLogIOs OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Pending aio Log I/Os"
+    ::= { myStatus 22 }
+
+myPendingAIOSyncIOs OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB pending aio Sync I/Os"
+    ::= { myStatus 23 }
+
+myPendingBufPoolFlushes OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB pending Buffer Pool flushes"
+    ::= { myStatus 24 }
+
+myPendingChkpWrites OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB pending Checkpoint Writes"
+    ::= { myStatus 25 }
+
+myPendingIbufAIOReads OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB pending Insert Buffer AIO Reads"
+    ::= { myStatus 26 }
+
+myPendingLogFlushes OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Pending Log Flushes"
+    ::= { myStatus 27 }
+
+myPendingLogWrites OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Pending Log Writes"
+    ::= { myStatus 28 }
+
+myPendingNormalAIOReads OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Pending Normal AIO reads"
+    ::= { myStatus 29 }
+
+myPendingNormalAIOWrites OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Pending Normal AIO writes"
+    ::= { myStatus 30 }
+
+myIbufInserts OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Innodb Insert Buffer inserts"
+    ::= { myStatus 31 }
+
+myIbufMerged OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Innodb Insert Buffer merged"
+    ::= { myStatus 32 }
+
+myIbufMerges OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Insert Buffer merges"
+    ::= { myStatus 33 }
+
+mySpinWaits OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Spin Waits"
+    ::= { myStatus 34 }
+
+mySpinRounds OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Spin Rounds"
+    ::= { myStatus 35 }
+
+myOsWaits OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB OS Waits"
+    ::= { myStatus 36 }
+
+myRowsInserted OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Rows Inserted"
+    ::= { myStatus 37 }
+
+myRowsUpdated OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Rows Updated"
+    ::= { myStatus 38 }
+
+myRowsDeleted OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Rows Deleted"
+    ::= { myStatus 39 }
+
+myRowsRead OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Rows Read"
+    ::= { myStatus 40 }
+
+myTableLocksWaited OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Table Locks Waited"
+    ::= { myStatus 41 }
+
+myTableLocksImmediate OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Table Locks Immediate"
+    ::= { myStatus 42 }
+
+mySlowQueries OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Slow Queries"
+    ::= { myStatus 43 }
+
+myOpenFiles OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Open Files"
+    ::= { myStatus 44 }
+
+myOpenTables OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Open Tables"
+    ::= { myStatus 45 }
+
+myOpenedTables OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Tables opened"
+    ::= { myStatus 46 }
+
+myInnodbOpenFiles OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB open files"
+    ::= { myStatus 47 }
+
+myOpenFilesLimit OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB open files limit"
+    ::= { myStatus 48 }
+
+myTableCache OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Table Cache"
+    ::= { myStatus 49 }
+
+myAbortedClients OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Aborted Clients"
+    ::= { myStatus 50 }
+
+myAbortedConnects OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Aborted Connects"
+    ::= { myStatus 51 }
+
+myMaxUsedConnections OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Max Used Connections"
+    ::= { myStatus 52 }
+
+mySlowLaunchThreads OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+  	"The number of threads that have taken
+  	 more than slow_launch_time seconds to
+  	 create."
+    ::= { myStatus 53 }
+
+myThreadsCached OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+  	"The number of threads in the thread
+  	 cache."
+    ::= { myStatus 54 }
+
+myThreadsConnected OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+  	"The number of currently open
+  	 connections."
+    ::= { myStatus 55 }
+
+myThreadsCreated OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+  	"The number of threads created to
+  	 handle connections."
+    ::= { myStatus 56 }
+
+myThreadsRunning OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+  	"The number of threads that are
+  	 not sleeping."
+    ::= { myStatus 57 }
+
+myMaxConnections OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of maximal clients connected"
+    ::= { myStatus 58 }
+
+myThreadCacheSize OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+  	"How many threads the server should cache for
+  	 reuse."
+    ::= { myStatus 59 }
+
+myConnections OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 60 }
+
+mySlaveRunning OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 61 }
+
+mySlaveStopped OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 62 }
+
+mySlaveRetriedTransactions OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 63 }
+
+mySlaveLag OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 64 }
+
+mySlaveOpenTempTables OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 65 }
+
+myQcacheFreeBlocks OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Query Cache free blocks"
+    ::= { myStatus 66 }
+
+myQcacheFreeMemory OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Query cache free memory"
+    ::= { myStatus 67 }
+
+myQcacheHits OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of Query cache hit"
+    ::= { myStatus 68 }
+
+myQcacheInserts OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of Query Cache Inserts"
+    ::= { myStatus 69 }
+
+myQcacheLowmemPrunes OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of Query Cache prunes for Low mem situation"
+    ::= { myStatus 70 }
+
+myQcacheNotCached OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of query not cached"
+    ::= { myStatus 71 }
+
+myQcacheQueriesInCache OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of Queries cached in Query cache"
+    ::= { myStatus 72 }
+
+myQcacheTotalBlocks OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of blocks in Query Cache"
+    ::= { myStatus 73 }
+
+myQueryCacheSize OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 74 }
+
+myQuestions OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of clients requests"
+    ::= { myStatus 75 }
+
+myComUpdate OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of update query"
+    ::= { myStatus 76 }
+
+myComInsert OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of insert queries"
+    ::= { myStatus 77 }
+
+myComSelect OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of select queries"
+    ::= { myStatus 78 }
+
+myComDelete OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of delete queries"
+    ::= { myStatus 79 }
+
+myComReplace OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of replace queries"
+    ::= { myStatus 80 }
+
+myComLoad OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of load queries"
+    ::= { myStatus 81 }
+
+myComUpdateMulti OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of update-multi queries"
+    ::= { myStatus 82 }
+
+myComInsertSelect OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of insert...select queries"
+    ::= { myStatus 83 }
+
+myComDeleteMulti OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of delete-multi queries"
+    ::= { myStatus 84 }
+
+myComReplaceSelect OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of replace..select queries"
+    ::= { myStatus 85 }
+
+mySelectFullJoin OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of select full join queries"
+    ::= { myStatus 86 }
+
+mySelectFullRangeJoin OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of select full range queries"
+    ::= { myStatus 87 }
+
+mySelectRange OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of select range"
+    ::= { myStatus 88 }
+
+mySelectRangeCheck OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of select ranche check"
+    ::= { myStatus 89 }
+
+mySelectScan OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of select scan"
+    ::= { myStatus 90 }
+
+mySortMergePasses OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of passes for filesorts"
+    ::= { myStatus 91 }
+
+mySortRange OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of sorts done by range"
+    ::= { myStatus 92 }
+
+mySortRows OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of sorted rows"
+    ::= { myStatus 93 }
+
+mySortScan OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of sorts done by table scan"
+    ::= { myStatus 94 }
+
+myCreatedTmpTables OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of tmp tables created"
+    ::= { myStatus 95 }
+
+myCreatedTmpDiskTables OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of tmp disk tables created"
+    ::= { myStatus 96 }
+
+myCreatedTmpFiles OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of tmp files created"
+    ::= { myStatus 97 }
+
+myBytesSent OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of bytes sent"
+    ::= { myStatus 98 }
+
+myBytesReceived OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of bytes received"
+    ::= { myStatus 99 }
+
+myInnodbLogBufferSize OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB log buffer size"
+    ::= { myStatus 100 }
+
+myUnflushedLog OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB unflushed log"
+    ::= { myStatus 101 }
+
+myLogBytesFlushed OBJECT-TYPE
+    SYNTAX	Counter64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB Logs bytes flushed to disk"
+    ::= { myStatus 102 }
+
+myLogBytesWritten OBJECT-TYPE
+    SYNTAX	Counter64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB logs bytes written"
+    ::= { myStatus 103 }
+
+myRelayLogSpace OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 104 }
+
+myBinlogCacheSize OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Binlog cache size"
+    ::= { myStatus 105 }
+
+myBinlogCacheDiskUse OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 106 }
+
+myBinlogCacheUse OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    ""
+    ::= { myStatus 107 }
+
+myBinaryLogSpace OBJECT-TYPE
+    SYNTAX	Counter32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Total size of all binlogs"
+    ::= { myStatus 108 }
+
+END

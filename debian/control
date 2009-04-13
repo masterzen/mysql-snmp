@@ -1,0 +1,14 @@
+Source: mysql-snmp
+Section: admin
+Priority: extra
+Maintainer: Brice Figureau <brice+debian@daysofwonder.com>
+Build-Depends: debhelper (>= 5)
+Standards-Version: 3.7.2
+
+Package: mysql-snmp
+Architecture: all
+Depends: ${perl:Depends}, snmpd, libsnmp-perl, libunix-syslog-perl, ${shlibs:Depends}, ${misc:Depends}
+Description: SNMP agent for mysql-server
+ This package contains a SNMP agent/subagent to expose Mysql-server
+ internal counters to SNMP.
+

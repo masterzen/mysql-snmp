@@ -1,0 +1,42 @@
+mysql-snmp (0.6-1) unstable; urgency=low
+
+  * returns No Such OID in case of refresh issues (should prevent rrd spikes)
+
+ -- brice <brice+debian@daysofwonder.com>  Sat,  2 Aug 2008 15:58:44 +0200
+
+mysql-snmp (0.5-1) unstable; urgency=low
+
+  * fixed myConnections type 
+
+ -- brice <brice+debian@daysofwonder.com>  Tue, 22 Jul 2008 19:28:34 +0200
+
+mysql-snmp (0.4-1) unstable; urgency=low
+
+  * installs mysql-snmp.default 
+
+ -- brice <brice+debian@daysofwonder.com>  Sat, 19 Jul 2008 14:12:54 +0200
+
+mysql-snmp (0.4) unstable; urgency=high
+
+  * new version compatible with net-snmp 5.4.1 
+
+ -- brice <brice+debian@daysofwonder.com>  Sat, 19 Jul 2008 14:02:53 +0200
+
+mysql-snmp (0.3) unstable; urgency=low
+
+  * init.d bugfixes
+
+ -- brice <brice+debian@daysofwonder.com>  Fri, 18 Jul 2008 16:13:32 +0200
+
+mysql-snmp (0.2) unstable; urgency=low
+
+  * new release with better code
+
+ -- brice <brice+debian@daysofwonder.com>  Fri, 18 Jul 2008 15:49:53 +0200
+
+mysql-snmp (0.1-1) unstable; urgency=low
+
+  * Initial release
+
+ -- brice <brice+debian@daysofwonder.com>  Thu, 17 Jul 2008 15:45:19 +0200
+

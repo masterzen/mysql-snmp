@@ -1,0 +1,129 @@
+<!--
+  Add this group to your datacollection-config.xml
+  Then add the group reference to your host definitions
+-->
+
+<!-- MySQL-SERVER MIB -->
+<group name="mysql" ifType="ignore">
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.1" instance="0" alias="myKeyReadRequests" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.2" instance="0" alias="myKeyReads" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.3" instance="0" alias="myKeyWriteRequests" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.4" instance="0" alias="myKeyWrites" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.5" instance="0" alias="myHistoryList" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.6" instance="0" alias="myInnodbTransactins" type="Counter64" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.7" instance="0" alias="myReadViews" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.8" instance="0" alias="myCurrentTransactns" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.9" instance="0" alias="myLockedTransactins" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.10" instance="0" alias="myActiveTransactins" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.11" instance="0" alias="myPoolSize" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.12" instance="0" alias="myFreePages" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.13" instance="0" alias="myDatabasePages" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.14" instance="0" alias="myModifiedPages" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.15" instance="0" alias="myPagesRead" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.16" instance="0" alias="myPagesCreated" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.17" instance="0" alias="myPagesWritten" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.18" instance="0" alias="myFileFsyncs" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.19" instance="0" alias="myFileReads" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.20" instance="0" alias="myFileWrites" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.21" instance="0" alias="myLogWrites" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.22" instance="0" alias="myPendingAIOLogIOs" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.23" instance="0" alias="myPendingAIOSyncIOs" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.24" instance="0" alias="myPendingBufPlFlshs" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.25" instance="0" alias="myPendingChkpWrites" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.26" instance="0" alias="myPendingIbufAIORds" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.27" instance="0" alias="myPendingLogFlushes" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.28" instance="0" alias="myPendingLogWrites" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.29" instance="0" alias="myPendingNrmlAIORds" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.30" instance="0" alias="myPendngNrmlAIOWrts" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.31" instance="0" alias="myIbufInserts" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.32" instance="0" alias="myIbufMerged" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.33" instance="0" alias="myIbufMerges" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.34" instance="0" alias="mySpinWaits" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.35" instance="0" alias="mySpinRounds" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.36" instance="0" alias="myOsWaits" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.37" instance="0" alias="myRowsInserted" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.38" instance="0" alias="myRowsUpdated" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.39" instance="0" alias="myRowsDeleted" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.40" instance="0" alias="myRowsRead" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.41" instance="0" alias="myTableLocksWaited" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.42" instance="0" alias="myTableLocksImmedit" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.43" instance="0" alias="mySlowQueries" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.44" instance="0" alias="myOpenFiles" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.45" instance="0" alias="myOpenTables" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.46" instance="0" alias="myOpenedTables" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.47" instance="0" alias="myInnodbOpenFiles" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.48" instance="0" alias="myOpenFilesLimit" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.49" instance="0" alias="myTableCache" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.50" instance="0" alias="myAbortedClients" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.51" instance="0" alias="myAbortedConnects" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.52" instance="0" alias="myMaxUsedConnectins" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.53" instance="0" alias="mySlowLaunchThreads" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.54" instance="0" alias="myThreadsCached" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.55" instance="0" alias="myThreadsConnected" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.56" instance="0" alias="myThreadsCreated" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.57" instance="0" alias="myThreadsRunning" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.58" instance="0" alias="myMaxConnections" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.59" instance="0" alias="myThreadCacheSize" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.60" instance="0" alias="myConnections" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.61" instance="0" alias="mySlaveRunning" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.62" instance="0" alias="mySlaveStopped" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.63" instance="0" alias="mySlaveRtrdTrnsctns" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.64" instance="0" alias="mySlaveLag" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.65" instance="0" alias="mySlaveOpenTempTbls" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.66" instance="0" alias="myQcacheFreeBlocks" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.67" instance="0" alias="myQcacheFreeMemory" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.68" instance="0" alias="myQcacheHits" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.69" instance="0" alias="myQcacheInserts" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.70" instance="0" alias="myQcacheLowmemPruns" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.71" instance="0" alias="myQcacheNotCached" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.72" instance="0" alias="myQcacheQuerisInCch" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.73" instance="0" alias="myQcacheTotalBlocks" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.74" instance="0" alias="myQueryCacheSize" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.75" instance="0" alias="myQuestions" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.76" instance="0" alias="myComUpdate" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.77" instance="0" alias="myComInsert" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.78" instance="0" alias="myComSelect" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.79" instance="0" alias="myComDelete" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.80" instance="0" alias="myComReplace" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.81" instance="0" alias="myComLoad" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.82" instance="0" alias="myComUpdateMulti" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.83" instance="0" alias="myComInsertSelect" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.84" instance="0" alias="myComDeleteMulti" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.85" instance="0" alias="myComReplaceSelect" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.86" instance="0" alias="mySelectFullJoin" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.87" instance="0" alias="mySelectFullRangeJn" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.88" instance="0" alias="mySelectRange" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.89" instance="0" alias="mySelectRangeCheck" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.90" instance="0" alias="mySelectScan" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.91" instance="0" alias="mySortMergePasses" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.92" instance="0" alias="mySortRange" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.93" instance="0" alias="mySortRows" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.94" instance="0" alias="mySortScan" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.95" instance="0" alias="myCreatedTmpTables" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.96" instance="0" alias="myCreatedTmpDskTbls" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.97" instance="0" alias="myCreatedTmpFiles" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.98" instance="0" alias="myBytesSent" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.99" instance="0" alias="myBytesReceived" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.100" instance="0" alias="myInnodbLogBufferSz" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.101" instance="0" alias="myUnflushedLog" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.102" instance="0" alias="myLogBytesFlushed" type="Counter64" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.103" instance="0" alias="myLogBytesWritten" type="Counter64" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.104" instance="0" alias="myRelayLogSpace" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.105" instance="0" alias="myBinlogCacheSize" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.106" instance="0" alias="myBinlogCacheDiskUs" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.107" instance="0" alias="myBinlogCacheUse" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.108" instance="0" alias="myBinaryLogSpace" type="Counter32" />
+</group>
+
+<systemDef name="Net-Snmp">
+  <sysoidMask>.1.3.6.1.4.1.8072.3.</sysoidMask>
+  <collect>
+    <includeGroup>mib2-host-resources-system</includeGroup>
+    <includeGroup>mib2-host-resources-memory</includeGroup>
+    <includeGroup>net-snmp-disk</includeGroup>
+    <includeGroup>ucd-loadavg</includeGroup>
+    <includeGroup>ucd-memory</includeGroup>
+    <includeGroup>ucd-sysstat</includeGroup>
+    <includeGroup>mysql</includeGroup>
+  </collect>
+</systemDef>
