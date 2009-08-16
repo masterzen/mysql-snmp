@@ -15,11 +15,11 @@
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.    See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.	If not, see <http://www.gnu.org/licenses/>.
+# along with this program.    If not, see <http://www.gnu.org/licenses/>.
 #
 
 use strict;
@@ -370,14 +370,14 @@ sub fetch_mysql_data {
                 $status{'relay_log_space'} = $row->{'relay_log_space'};
                 $status{'slave_lag'}       = $row->{'seconds_behind_master'};
 
-            # Check replication heartbeat, if present.
-            # if ( $hb_table ) {
-            #	 $result = run_query(
-            #		"SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1)"
-            #		. "FROM $hb_table WHERE id = 1", $conn);
-            #	 $row2 = @mysql_fetch_row($result);
-            #	 $status{'slave_lag'} = $row2[0];
-            # }
+      # Check replication heartbeat, if present.
+      # if ( $hb_table ) {
+      #     $result = run_query(
+      #        "SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1)"
+      #        . "FROM $hb_table WHERE id = 1", $conn);
+      #     $row2 = @mysql_fetch_row($result);
+      #     $status{'slave_lag'} = $row2[0];
+      # }
 
             # Scale slave_running and slave_stopped relative to the slave lag.
                 $status{'slave_running'}
@@ -511,7 +511,7 @@ sub fetch_mysql_data {
                 elsif ( $line =~ m/Log flushed up to/ ) {
 
          # Since PHP can't handle 64-bit numbers, we'll ask MySQL to do it for
-         # us instead.	And we get it to cast them to strings, too.
+         # us instead.    And we get it to cast them to strings, too.
                     @flushed_to = ( $row[4], $row[5] );
                 }
 
@@ -714,8 +714,8 @@ sub my_snmp_handler($$$$) {
     my ( $handler, $registration_info, $request_info, $requests ) = @_;
     my ($request);
 
-   #  print STDERR "refs: ",join(", ", ref($handler), ref($registration_info),
-   #							 ref($request_info), ref($requests)),"\n" if ($debugging);
+#  print STDERR "refs: ",join(", ", ref($handler), ref($registration_info),
+#                             ref($request_info), ref($requests)),"\n" if ($debugging);
 
     for ( $request = $requests; $request; $request = $request->next() ) {
 
@@ -754,7 +754,7 @@ sub my_snmp_handler($$$$) {
                     $i++;
 
 #print STDERR "Comparing $oid to $oidToUse ".ref($oid)." ".ref($oidToUse).
-#	  " cmp=".NetSNMP::OID::compare($oid, $oidToUse)." cmp2=".($oid <= $oidToUse)."\n";
+#      " cmp=".NetSNMP::OID::compare($oid, $oidToUse)." cmp2=".($oid <= $oidToUse)."\n";
                     } while ( NetSNMP::OID::compare( $oid, $oidToUse ) > -1
                     and $i <= scalar @ks );
 
@@ -776,7 +776,7 @@ sub dolog($$) {
     print STDERR $msg . "\n" if ($debugging);
 }
 
-# We need to perform a loop here waiting for snmp requests.	 We
+# We need to perform a loop here waiting for snmp requests.     We
 # also check for new STATUS data.
 $SIG{'INT'}  = \&shut_it_down;
 $SIG{'QUIT'} = \&shut_it_down;
