@@ -35,6 +35,7 @@ use NetSNMP::default_store qw(:all);
 use SNMP;
 use DBI;
 use DBD::mysql;
+use Pod::Usage;
 
 sub my_snmp_handler($$$$);
 netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID,
@@ -42,58 +43,53 @@ netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID,
 my $agent = new NetSNMP::agent( 'Name' => 'mysql', 'AgentX' => 1 );
 
 my $VERSION = "0.6";
-my %opt     = ();
 
-sub usage {
-    print "usage: mysql-agent.pl [*options*]\n\n";
-    print "	 --help				display this help and exit\n";
-    print "	 -v, --verbose		be verbose about what you do\n";
-    print "	 -V, --version		output version information and exit\n";
-    print
-        "	 --daemon-pid=FILE	write PID to FILE instead of /var/run/mysql-agent.pid\n";
-    print "	 -u DBUSER			use DBUSER as user to connect to mysql\n";
-    print "	 -p DBPASS			use DBPASS as password to connect to mysql\n";
-    print "	 -h|--host HOST		connect to HOST\n";
-    print "	 -P|--port PORT		port to connect (default 3306)\n";
-    print "	 -m|--master		check master\n";
-    print "	 -s|--slave			check slave\n";
-    print "	 --oid OID			registering OID\n";
-    print "	 -i|--refresh		refresh interval in seconds\n";
-    print "	 \n";
-    exit;
-}
+my %opt = (
+    daemon_pid  => '/var/run/mysql-agent.pid',
+    host        => 'localhost',
+    oid         => '1.3.6.1.4.1.20267.200.1',
+    pass        => '',
+    port        => '3306',
+    refresh     => '300',
+    user        => 'monitor',
+);
 
 Getopt::Long::Configure('no_ignore_case');
 GetOptions(
-    \%opt,         'help',
-    'version|V',   'verbose|v+',
-    'u|user=s',    'p|password=s',
-    'h|host=s',    'P|port=i',
-    'no-daemon',   'master|m',
-    'slave|s',     'oid',
-    'i|refresh=i', 'daemon_pid|daemon-pid=s',
-) or exit(1);
+    \%opt,
+    'daemon_pid|daemon-pid=s',
+    'help|?',
+    'host=s',
+    'man',
+    'master|m',
+    'no-daemon',
+    'oid',
+    'password=s',
+    'port|P=i',
+    'refresh|i=i',
+    'slave',
+    'user=s',
+    'usage',
+    'verbose|v+',    
+    'version|V',
+) or pod2usage(-verbose => 0);
 
-usage() if $opt{help};
+pod2usage(-verbose => 0) if $opt{usage};
+pod2usage(-verbose => 1) if $opt{help};
+pod2usage(-verbose => 2) if $opt{man};
 
 if ( $opt{version} ) {
     print "mysql-agent.pl $VERSION by brice.figureau\@daysofwonder.com\n";
     exit;
 }
 
-my $user = $opt{u} || "monitor";
-my $pass = $opt{p} || "";
-my $host = $opt{h} || 'localhost';
-my $port = $opt{P} || '3306';
 my $debugging      = $opt{verbose};
-my $daemon_pidfile = $opt{'daemon-pid'} || '/var/run/mysql-agent.pid';
 my $subagent       = 0;
 my $chk_innodb = 1;    # Do you want to check InnoDB statistics?
 my $chk_master = 1;    # Do you want to check binary logging?
 my $chk_slave  = 0;    # Do you want to check slave status?
-my $refresh_interval = $opt{i} || 300;
 
-my $dsn     = "DBI:mysql:host=${host};port=${port}";
+my $dsn     = "DBI:mysql:host=$opt{host};port=$opt{port}";
 my $running = 0;
 my $error   = 0;
 
@@ -109,9 +105,7 @@ my %global_status       = ();
 my $global_last_refresh = 0;
 
 # enterprises.20267.200.1
-my $startOID = $opt{oid} || ".1.3.6.1.4.1.20267.200.1";
-my $regOID = new NetSNMP::OID($startOID);
-
+my $regOID = new NetSNMP::OID($opt{oid});
 $agent->register( "mysql", $regOID, \&my_snmp_handler );
 
 # various types & definitions
@@ -314,8 +308,8 @@ sub daemonize() {
     if ($pid) {
 
         # parent
-        open PIDFILE, ">$daemon_pidfile"
-            or die "mysql-agent: can't write to $daemon_pidfile: $!\n";
+        open PIDFILE, '>', $opt{daemon_pidfile}
+            or die "$0: can't write to $opt{daemon_pidfile}: $!\n";
         print PIDFILE "$pid\n";
         close(PIDFILE);
         exit;
@@ -635,17 +629,17 @@ sub refresh_status {
     my $now      = time();
 
     # Check if we have been called quicker than once every $refresh_interval
-    if ( ( $now - $global_last_refresh ) < $refresh_interval ) {
+    if ( ( $now - $global_last_refresh ) < $opt{refresh_interval} ) {
 
         # if yes, do not do anything
         dolog( LOG_DEBUG,
                   "not refreshing: "
                 . ( $now - $global_last_refresh )
-                . " < $refresh_interval" )
+                . " < $opt{refresh_interval}" )
             if ($debugging);
         return;
     }
-    my ( $oid, $types, $status ) = fetch_mysql_data( $dsn, $user, $pass );
+    my ( $oid, $types, $status ) = fetch_mysql_data( $dsn, $opt{user}, $opt{pass} );
     if ($oid) {
         dolog( LOG_DEBUG, "Setting error to 0" ) if ($debugging);
         $error = 0;
@@ -789,9 +783,102 @@ $SIG{'QUIT'} = \&shut_it_down;
 $SIG{'TERM'} = \&shut_it_down;
 $running     = 1;
 while ($running) {
-    refresh_status($startOID);
+    refresh_status($opt{oid});
     $agent->agent_check_and_process(1);    # 1 = block
 }
 $agent->shutdown();
 
 dolog( LOG_INFO, "agent shutdown" );
+
+__END__
+=head1 NAME
+
+    mysql-agent - report mysql statistics via SNMP 
+ 
+=head1 SYNOPSIS
+ 
+    mysql-agent.pl [options]
+
+    -h HOST, --host=HOST      connect to MySQL DB on HOST
+    -u USER, --user=USER      use USER as user to connect to mysql
+    -p PASS, --password=PASS  use PASS as password to connect to mysql
+    -P PORT, --port=PORT      port to connect (default 3306)
+    --daemon-pid=FILE         write PID to FILE instead of $default{pid}
+    -n, --no-daemon           do not detach and become a daemon
+    -m, --master              check master
+    -s, --slave               check slave
+    -o OID, --oid=OID         registering OID
+    -i INT, --refresh=INT     set refresh interval to INT (seconds)
+    -?, --help                display this help and exit
+    --man                     display program man page
+    -v, --verbose             be verbose about what you do
+    -V, --version             output version information and exit
+
+=head1 OPTIONS
+
+=over 8
+
+=item B<-h HOST, --host=HOST>
+
+connect to MySQL DB on HOST
+
+=item B<-u USER, --user=USER>
+
+use USER as user to connect to mysql
+
+=item B<-p PASS, --password=PASS>
+
+use PASS as password to connect to mysql
+
+=item B<-P PORT, --port=PORT>
+
+port to connect (default 3306)
+
+=item B<--daemon-pid=FILE>
+
+write PID to FILE instead of $default{pid}
+
+=item B<-n, --no-daemon>
+
+do not detach and become a daemon
+
+=item B<-m, --master>
+
+check master
+
+=item B<-s, --slave>
+
+check slave
+
+=item B<-o OID, --oid=OID>
+
+registering OID
+
+=item B<-i INT, --refresh=INT>
+
+refresh interval in seconds
+
+=item B<-?, --help>
+
+Print a brief help message and exits.
+
+=item B<--man>
+
+Prints the manual page and exits.
+
+=item B<-v, --verbose>
+
+be verbose about what you do
+
+=item B<-V, --version>
+
+output version information and exit
+
+=back
+
+=head1 DESCRIPTION
+
+B<mysql-agent> is a small daemon that connects to a local snmpd daemon
+to report statistics on a local or remote MySQL server.
+
+=cut
