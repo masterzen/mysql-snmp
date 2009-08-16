@@ -34,6 +34,7 @@ use NetSNMP::agent::default_store;
 use NetSNMP::default_store qw(:all);
 use SNMP;
 use DBI;
+use DBD::mysql;
 
 sub my_snmp_handler($$$$);
 netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID,
