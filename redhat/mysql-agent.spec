@@ -1,6 +1,6 @@
 Name:           mysql-agent
 Version:        0.7
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        SNMP monitoring agent for MySQL
 
 Group:          Applications/Databases
@@ -42,7 +42,7 @@ install -m 644 MYSQL-SERVER-MIB.txt ${RPM_BUILD_ROOT}%{_datadir}/snmp/mibs
 
 %files
 %defattr(-,root,root,-)
-%doc COPYING README
+%doc COPYING README opennms/*
 %{_sbindir}/*
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %config(noreplace) %{_sysconfdir}/snmp/my.cnf
@@ -51,5 +51,7 @@ install -m 644 MYSQL-SERVER-MIB.txt ${RPM_BUILD_ROOT}%{_datadir}/snmp/mibs
 %{_datadir}/snmp/mibs/*
 
 %changelog
+* Mon Sep 28 2009 Robin Bowes <rpmbuild@yo61.net> - 0.7-2
+Add opennms config files to package
 * Mon Sep 28 2009 Robin Bowes <rpmbuild@yo61.net> - 0.7-1
 Initial RPM packaging
