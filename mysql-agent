@@ -68,6 +68,7 @@ GetOptions(
     'oid|o',
     'refresh|r=i',
     'daemon_pid|daemon-pid=s',
+    'heartbeat|b=s',
     'no-daemon',
     'man',
     'usage',
@@ -364,13 +365,10 @@ sub fetch_mysql_data {
 				$status{'slave_lag'}		= $newrow{'seconds_behind_master'};
 
 				# Check replication heartbeat, if present.
-				# if ( $hb_table ) {
-				#	 $result = run_query(
-				#		"SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1)"
-				#		. "FROM $hb_table WHERE id = 1", $conn);
-				#	 $row2 = @mysql_fetch_row($result);
-				#	 $status{'slave_lag'} = $row2[0];
-				# }
+				if ( $opt{heartbeat} ne '' ) {
+					my $row2 = $dbh->selectrow_arrayref("SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1) FROM $hb_table WHERE id = 1");
+					$status{'slave_lag'} = $row2->[0];
+				}
 
 				$status{'slave_running'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 1 : 0;
 				$status{'slave_stopped'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 0 : 1;
@@ -760,6 +758,7 @@ __END__
     -c FILE, --config=FILE    read mysql connection details from FILE
     -m, --master              check master
     -s, --slave               check slave
+    -b, --heartbeat DB.TABLE  table for checking slave lag with mk-hearbeat
     -i, --innodb              read innodb settings
     -o OID, --oid=OID         registering OID
     -r INT, --refresh=INT     set refresh interval to INT (seconds)
@@ -811,6 +810,10 @@ check master
 =item B<-s, --slave>
 
 check slave
+
+=item B<-b DB.TABLE, --heartbeat DB.TABLE>
+
+specifies the table containing the mk-heartbeat timestamp for computing slave lag
 
 =item B<-i, --innodb>
 
