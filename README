@@ -4,7 +4,7 @@ Copyright (c) 2008,2009 Brice Figureau <brice.figureau@daysofwonder.com>
 PREAMBLE
 ========
 
-Mysql-snmp is a MySQL Net-SNMP agent written in Perl, and using the Net-Snmp 
+mysql-agent is a MySQL Net-SNMP agent written in Perl, and using the Net-Snmp 
 Perl bindings.
 
 It connects to a mysql server and returns information to Net-SNMP when needed.
@@ -64,14 +64,25 @@ Configure mysql-snmp
 Under debian, the daemon can be configured with /etc/default/mysql-snmp.
 On all platform, the configuration is done with command line arguments:
 
--u DBUSER          use DBUSER as user to connect to mysql
--p DBPASS          use DBPASS as password to connect to mysql
--h|--host HOST     connect to mysql HOST
--P|--port PORT     port to connect to (default 3306)
+-h|--host HOST         connect to mysql HOST
+-P|--port PORT         port to connect to (default 3306)
+-u|--user DBUSER       use DBUSER as user to connect to mysql
+-p|--passwordi DBPASS  use DBPASS as password to connect to mysql
+-c|--config FILE       read MySQL configuration from FILE
+
 -m|--master        check master
 -s|--slave         check slave
 --oid OID          registering OID
 -i|--refresh       refresh interval in seconds
+
+You can specify the mysql connection parameters in a config file using my.cnf format, like this:
+For example:
+
+[client]
+host=dbserver
+port=3306
+user=monitor
+password=secret
 
 
 OPENNMS

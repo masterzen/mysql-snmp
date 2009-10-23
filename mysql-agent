@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 #
 #
 # This program implements a SNMP agent for MySQL servers
@@ -19,13 +19,17 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.    If not, see <http://www.gnu.org/licenses/>.
-#
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+my $VERSION = "0.7";
+$VERSION = eval $VERSION;
 
 use strict;
+use warnings;
+use Carp;
 use Data::Dumper;
 use Unix::Syslog qw(:subs :macros);
-use Getopt::Long;
+use Getopt::Long qw(:config auto_help auto_version no_ignore_case);
 use POSIX qw( setsid );
 use NetSNMP::OID (':all');
 use NetSNMP::agent(':all');
@@ -37,65 +41,61 @@ use DBI;
 use DBD::mysql;
 use Pod::Usage;
 
-sub my_snmp_handler($$$$);
 netsnmp_ds_set_boolean( NETSNMP_DS_APPLICATION_ID,
     NETSNMP_DS_AGENT_NO_ROOT_ACCESS, 1 );
 my $agent = new NetSNMP::agent( 'Name' => 'mysql', 'AgentX' => 1 );
 
-my $VERSION = "0.6";
-
 my %opt = (
-    daemon_pid  => '/var/run/mysql-agent.pid',
-    host        => 'localhost',
-    oid         => '1.3.6.1.4.1.20267.200.1',
-    pass        => '',
-    port        => '3306',
-    refresh     => '300',
-    user        => 'monitor',
+    daemon_pid => '/var/run/mysql-agent.pid',
+    oid        => '1.3.6.1.4.1.20267.200.1',
+    port       => 3306,
+    refresh    => 300,
+    master     => 1,
+    slave      => 0,
+    innodb     => 1,
 );
 
-Getopt::Long::Configure('no_ignore_case');
 GetOptions(
     \%opt,
-    'daemon_pid|daemon-pid=s',
-    'help|?',
-    'host=s',
-    'man',
-    'master|m',
-    'no-daemon',
-    'oid',
-    'password=s',
+    'host|h=s',
     'port|P=i',
-    'refresh|i=i',
-    'slave',
-    'user=s',
+    'user|u=s',
+    'password|p=s',
+    'config|c=s',
+    'master|m!',
+    'slave|s!',
+    'innodb|i!',
+    'oid|o',
+    'refresh|r=i',
+    'daemon_pid|daemon-pid=s',
+    'no-daemon',
+    'man',
     'usage',
-    'verbose|v+',    
-    'version|V',
-) or pod2usage(-verbose => 0);
+    'verbose|v+',
+    "version" => sub { VersionMessage() },
+) or pod2usage( -verbose => 0 );
 
-pod2usage(-verbose => 0) if $opt{usage};
-pod2usage(-verbose => 1) if $opt{help};
-pod2usage(-verbose => 2) if $opt{man};
+pod2usage( -verbose => 0 ) if $opt{usage};
+pod2usage( -verbose => 1 ) if $opt{help};
+pod2usage( -verbose => 2 ) if $opt{man};
 
-if ( $opt{version} ) {
-    print "mysql-agent.pl $VERSION by brice.figureau\@daysofwonder.com\n";
-    exit;
+sub VersionMessage {
+    print "mysql-agent $VERSION by brice.figureau\@daysofwonder.com\n";
 }
 
-my $debugging      = $opt{verbose};
-my $subagent       = 0;
-my $chk_innodb = 1;    # Do you want to check InnoDB statistics?
-my $chk_master = 1;    # Do you want to check binary logging?
-my $chk_slave  = 0;    # Do you want to check slave status?
+my $debugging  = $opt{verbose};
+my $subagent   = 0;
 
-my $dsn     = "DBI:mysql:host=$opt{host};port=$opt{port}";
+my $dsn     = 'DBI:mysql:';
+if ($opt{config}) {
+    $dsn .= "mysql_read_default_file=$opt{config}";
+}
+else { 
+    $dsn .= join(';', "host=$opt{host}", "port=$opt{port}");
+}
+
 my $running = 0;
 my $error   = 0;
-
-# prototypes
-sub daemonize();
-sub dolog($$);
 
 openlog( "mysql-agent", LOG_PID | LOG_PERROR, LOG_DAEMON );
 
@@ -105,7 +105,7 @@ my %global_status       = ();
 my $global_last_refresh = 0;
 
 # enterprises.20267.200.1
-my $regOID = new NetSNMP::OID($opt{oid});
+my $regOID = new NetSNMP::OID( $opt{oid} );
 $agent->register( "mysql", $regOID, \&my_snmp_handler );
 
 # various types & definitions
@@ -278,7 +278,7 @@ if ($debugging) {
 }
 
 # takes only numbers from a string
-sub tonum ($) {
+sub tonum {
     my $str = shift;
     return 0 if !$str;
     return $1 if $str =~ m/(\d+)/;
@@ -286,21 +286,19 @@ sub tonum ($) {
 }
 
 # return a string to build a 64 bit number
-sub make_bigint_sql ($$) {
-    my $hi = shift;
-    my $lo = shift;
+sub make_bigint_sql {
+    my ($hi, $lo) = @_;
     return "(($hi << 32) + $lo)";
 }
 
-sub max($$) {
-    my $a = shift;
-    my $b = shift;
+sub max {
+    my ($a, $b) = @_;
     return $a if $a > $b;
     return $b;
 }
 
 # daemonize the program
-sub daemonize() {
+sub daemonize {
     open STDIN, '/dev/null' or die "mysql-agent: can't read /dev/null: $!";
     open STDOUT, '>/dev/null'
         or die "mysql-agent: can't write to /dev/null: $!";
@@ -308,10 +306,10 @@ sub daemonize() {
     if ($pid) {
 
         # parent
-        open PIDFILE, '>', $opt{daemon_pidfile}
-            or die "$0: can't write to $opt{daemon_pidfile}: $!\n";
-        print PIDFILE "$pid\n";
-        close(PIDFILE);
+        open my $pidfile, '>', $opt{daemon_pid}
+            or croak "Couldn't open $opt{daemon_pid} for writing: $!";
+        print {$pidfile} "$pid\n" or croak "Couldn't write pid to $opt{daemon_pid}: $!";
+        close $pidfile or croak "Couldn't close $opt{daemon_pid}: $!";
         exit;
     }
 
@@ -326,10 +324,7 @@ sub fetch_mysql_data {
     my ( $datasource, $dbuser, $dbpass ) = @_;
     my %output;
     eval {
-        my $dbh
-            = DBI->connect( $datasource, $dbuser, $dbpass,
-            { RaiseError => 1, AutoCommit => 1 } );
-
+        my $dbh = DBI->connect( $datasource, $dbuser, $dbpass, { RaiseError => 1, AutoCommit => 1 } );
         if ( !$dbh ) {
             dolog( LOG_CRIT, "Can't connect to database: $datasource, $@" );
             return;
@@ -360,7 +355,7 @@ sub fetch_mysql_data {
             $status{ $row->[0] } = $row->[1];
         }
 
-        if ($chk_slave) {
+        if ($opt{slave}) {
             $result = $dbh->selectall_arrayref("SHOW SLAVE STATUS");
             foreach my $row (@$result) {
 
@@ -393,7 +388,7 @@ sub fetch_mysql_data {
 
         # Get info on master logs.
         my @binlogs = (0);
-        if ( $chk_master && $status{'log_bin'} eq 'ON' ) {    # See issue #8
+        if ( $opt{master} && $status{'log_bin'} eq 'ON' ) {    # See issue #8
             $result = $dbh->selectall_arrayref( "SHOW MASTER LOGS",
                 { Slice => {} } );
             foreach my $row (@$result) {
@@ -419,7 +414,7 @@ sub fetch_mysql_data {
         my @spin_rounds;
         my @os_waits;
 
-        if ( $chk_innodb && $status{'have_innodb'} eq 'YES' ) {
+        if ( $opt{innodb} && $status{'have_innodb'} eq 'YES' ) {
             my $innodb_array
                 = $dbh->selectall_arrayref(
                 "SHOW /*!50000 ENGINE*/ INNODB STATUS",
@@ -628,18 +623,19 @@ sub refresh_status {
     my $startOID = shift;
     my $now      = time();
 
-    # Check if we have been called quicker than once every $refresh_interval
-    if ( ( $now - $global_last_refresh ) < $opt{refresh_interval} ) {
+    # Check if we have been called quicker than once every $refresh
+    if ( ( $now - $global_last_refresh ) < $opt{refresh} ) {
 
         # if yes, do not do anything
         dolog( LOG_DEBUG,
                   "not refreshing: "
                 . ( $now - $global_last_refresh )
-                . " < $opt{refresh_interval}" )
+                . " < $opt{refresh}" )
             if ($debugging);
         return;
     }
-    my ( $oid, $types, $status ) = fetch_mysql_data( $dsn, $opt{user}, $opt{pass} );
+    my ( $oid, $types, $status )
+        = fetch_mysql_data( $dsn, $opt{user}, $opt{pass} );
     if ($oid) {
         dolog( LOG_DEBUG, "Setting error to 0" ) if ($debugging);
         $error = 0;
@@ -710,7 +706,7 @@ sub set_value {
     }
 }
 
-sub my_snmp_handler($$$$) {
+sub my_snmp_handler {
     my ( $handler, $registration_info, $request_info, $requests ) = @_;
     my ($request);
 
@@ -770,7 +766,7 @@ sub my_snmp_handler($$$$) {
     dolog( LOG_DEBUG, "finished processing" ) if ($debugging);
 }
 
-sub dolog($$) {
+sub dolog {
     my ( $level, $msg ) = @_;
     syslog( $level, $msg );
     print STDERR $msg . "\n" if ($debugging);
@@ -783,7 +779,7 @@ $SIG{'QUIT'} = \&shut_it_down;
 $SIG{'TERM'} = \&shut_it_down;
 $running     = 1;
 while ($running) {
-    refresh_status($opt{oid});
+    refresh_status( $opt{oid} );
     $agent->agent_check_and_process(1);    # 1 = block
 }
 $agent->shutdown();
@@ -791,27 +787,32 @@ $agent->shutdown();
 dolog( LOG_INFO, "agent shutdown" );
 
 __END__
+
 =head1 NAME
 
     mysql-agent - report mysql statistics via SNMP 
  
 =head1 SYNOPSIS
  
-    mysql-agent.pl [options]
+    mysql-agent [options]
 
     -h HOST, --host=HOST      connect to MySQL DB on HOST
+    -P PORT, --port=PORT      port to connect (default 3306)
     -u USER, --user=USER      use USER as user to connect to mysql
     -p PASS, --password=PASS  use PASS as password to connect to mysql
-    -P PORT, --port=PORT      port to connect (default 3306)
-    --daemon-pid=FILE         write PID to FILE instead of $default{pid}
-    -n, --no-daemon           do not detach and become a daemon
+    -c FILE, --config=FILE    read mysql connection details from FILE
     -m, --master              check master
     -s, --slave               check slave
+    -i, --innodb              read innodb settings
     -o OID, --oid=OID         registering OID
-    -i INT, --refresh=INT     set refresh interval to INT (seconds)
-    -?, --help                display this help and exit
-    --man                     display program man page
+    -r INT, --refresh=INT     set refresh interval to INT (seconds)
+    --daemon-pid=FILE         write PID to FILE instead of $default{pid}
+    -n, --no-daemon           do not detach and become a daemon
     -v, --verbose             be verbose about what you do
+
+    -?, --help                display this help and exit
+    --usage                   display detailed usage information
+    --man                     display program man page
     -V, --version             output version information and exit
 
 =head1 OPTIONS
@@ -822,6 +823,10 @@ __END__
 
 connect to MySQL DB on HOST
 
+=item B<-P PORT, --port=PORT>
+
+port to connect (default 3306)
+
 =item B<-u USER, --user=USER>
 
 use USER as user to connect to mysql
@@ -830,17 +835,17 @@ use USER as user to connect to mysql
 
 use PASS as password to connect to mysql
 
-=item B<-P PORT, --port=PORT>
+=item B<-c FILE, --config=FILE>
 
-port to connect (default 3306)
+read mysql connection details from file FILE.
 
-=item B<--daemon-pid=FILE>
+These should be stored in a section named [client]. Eg:
 
-write PID to FILE instead of $default{pid}
-
-=item B<-n, --no-daemon>
-
-do not detach and become a daemon
+  [client]
+  host=dbserver
+  port=3306
+  user=monitor
+  password=secret
 
 =item B<-m, --master>
 
@@ -850,25 +855,41 @@ check master
 
 check slave
 
+=item B<-i, --innodb>
+
+check innodb details
+
 =item B<-o OID, --oid=OID>
 
 registering OID
 
-=item B<-i INT, --refresh=INT>
+=item B<-r INT, --refresh=INT>
 
 refresh interval in seconds
 
-=item B<-?, --help>
+=item B<--daemon-pid=FILE>
 
-Print a brief help message and exits.
+write PID to FILE instead of $default{pid}
+
+=item B<-n, --no-daemon>
+
+do not detach and become a daemon
+
+=item B<-v, --verbose>
+
+be verbose about what you do
 
 =item B<--man>
 
 Prints the manual page and exits.
 
-=item B<-v, --verbose>
+=item B<--usage>
 
-be verbose about what you do
+Prints detailed usage information and exits.
+
+=item B<-?, --help>
+
+Print a brief help message and exits.
 
 =item B<-V, --version>
 
