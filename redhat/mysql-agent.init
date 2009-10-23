@@ -1,0 +1,90 @@
+#! /bin/sh
+#
+# mysql-agent   Init script for running the mysql snmp agent daemon
+#
+# Author:       Robin Bowes <robin@robinbowes.com>
+#
+# chkconfig: - 98 02
+#
+# description: Enables monitoring of MySQL through SNMP
+# processname: mysql-agent
+# config: /etc/sysconfig/mysql-agent
+#
+# This script is based on a debian init script written by Brice Figureau
+#
+# Copyright (c) 2008, 2009 Brice Figureau
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+prog=mysql-agent
+daemon="/usr/sbin/$prog"
+
+# Include mysql-agent defaults if available
+if [ -e /etc/sysconfig/$prog ] ; then
+        . /etc/sysconfig/$prog
+fi
+
+RETVAL=0
+
+start() {
+        echo -n $"Starting $prog: "
+        if [ $UID -ne 0 ]; then
+                RETVAL=1
+                failure
+        else
+                daemon $daemon $OPTIONS
+                RETVAL=$?
+                [ $RETVAL -eq 0 ] && touch /var/lock/subsys/$prog
+        fi;
+        echo
+        return $RETVAL
+}
+
+stop() {
+        echo -n $"Stopping $prog: "
+        if [ $UID -ne 0 ]; then
+                RETVAL=1
+                failure
+        else
+                killproc -p /var/run/${prog}.pid $daemon
+                RETVAL=$?
+                [ $RETVAL -eq 0 ] && rm -f /var/lock/subsys/$prog
+        fi;
+        echo
+        return $RETVAL
+}
+restart(){
+        stop
+        start
+}
+condrestart(){
+    [ -e /var/lock/subsys/$prog ] && restart
+    return 0
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart)
+        restart
+        ;;
+  condrestart)
+        condrestart
+        ;;
+  status)
+        status $prog
+        RETVAL=$?
+        ;;
+  *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart}"
+        RETVAL=1
+esac
+
+exit $RETVAL
