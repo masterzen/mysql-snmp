@@ -656,7 +656,9 @@ sub set_value {
     if (!$error) {
         my $oidname = $oids{$oid}->{'name'};
         if (!defined $oidname) {
-            dolog(LOG_ERR, "Error finding a oidname for $oid");
+            if ($oid != $regOID) {
+                dolog(LOG_ERR, "Error finding a oidname for $oid");
+            }
             return;
         }
 
