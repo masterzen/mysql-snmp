@@ -1,3 +1,10 @@
+mysql-snmp (0.7-1) unstable; urgency=low
+
+  * new upstream version
+  * moved manpage to top directory
+
+ -- brice <brice+debian@daysofwonder.com>  Sat, 24 Oct 2009 17:12:44 +0200
+
 mysql-snmp (0.6-1) unstable; urgency=low
 
   * returns No Such OID in case of refresh issues (should prevent rrd spikes)

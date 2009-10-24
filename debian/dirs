@@ -2,3 +2,5 @@ etc/default
 etc/init.d
 usr/sbin
 usr/share/snmp/mibs
+usr/share/man/man1
+

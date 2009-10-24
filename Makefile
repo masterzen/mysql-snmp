@@ -14,9 +14,10 @@
 build:
 
 install:
-	install -m 755 mysql-agent.pl $(DESTDIR)/usr/sbin/mysql-agent
+	install -m 755 mysql-agent $(DESTDIR)/usr/sbin/mysql-agent
 	install -m 644 MYSQL-SERVER-MIB.txt $(DESTDIR)/usr/share/snmp/mibs
-	install -m 644 mysql-agent.1.gz $(DESTDIR)/usr/man/man1
+	install -m 644 mysql-agent.1 $(DESTDIR)/usr/share/man/man1
+	gzip $(DESTDIR)/usr/share/man/man1
 
 clean:
 	-rm $(DESTDIR)/usr/sbin/mysql-agent
