@@ -53,6 +53,8 @@ my %opt = (
     master     => 1,
     slave      => 0,
     innodb     => 1,
+	host       => 'localhost',
+	heartbeat  => ''
 );
 
 GetOptions(
