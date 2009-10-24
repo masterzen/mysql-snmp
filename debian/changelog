@@ -1,3 +1,9 @@
+mysql-snmp (0.8-1) unstable; urgency=low
+
+  * new upstream version
+
+ -- brice <brice+debian@daysofwonder.com>  Sat, 24 Oct 2009 18:55:15 +0200
+
 mysql-snmp (0.7-1) unstable; urgency=low
 
   * new upstream version

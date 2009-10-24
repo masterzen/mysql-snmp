@@ -1,5 +1,5 @@
 Name:           mysql-agent
-Version:        0.7
+Version:        0.8
 Release:        2%{?dist}
 Summary:        SNMP monitoring agent for MySQL
 
