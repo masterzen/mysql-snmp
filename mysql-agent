@@ -291,6 +291,9 @@ sub tonum {
 # return a string to build a 64 bit number
 sub make_bigint_sql {
     my ($hi, $lo) = @_;
+	unless ($lo) {
+	    return "(CONV('$hi', 16, 10))";
+    }
     return "(($hi << 32) + $lo)";
 }
 
@@ -368,7 +371,7 @@ sub fetch_mysql_data {
 
 				# Check replication heartbeat, if present.
 				if ( $opt{heartbeat} ne '' ) {
-					my $row2 = $dbh->selectrow_arrayref("SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1) FROM $hb_table WHERE id = 1");
+					my $row2 = $dbh->selectrow_arrayref("SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1) FROM $opt{heartbeat} WHERE id = 1");
 					$status{'slave_lag'} = $row2->[0];
 				}
 
@@ -400,18 +403,16 @@ sub fetch_mysql_data {
 
         # Get SHOW INNODB STATUS and extract the desired metrics from it.
         my @innodb_txn = ();
-        my @flushed_to = ();
-        my @innodb_lsn = ();
+        my $flushed_to;
+        my $innodb_lsn;
         my @innodb_prg = ();
         my @spin_waits;
         my @spin_rounds;
         my @os_waits;
+        my $txn_seen = 0;
 
         if ($opt{innodb} && $status{'have_innodb'} eq 'YES') {
-            my $innodb_array = $dbh->selectall_arrayref(
-                "SHOW /*!50000 ENGINE*/ INNODB STATUS",
-                {Slice => {}}
-            );
+            my $innodb_array = $dbh->selectall_arrayref("SHOW /*!50000 ENGINE*/ INNODB STATUS",{Slice => {}});
             my @lines = split("\n", $innodb_array->[0]{'Status'});
 
             foreach my $line (@lines) {
@@ -429,35 +430,35 @@ sub fetch_mysql_data {
                     push(@os_waits,   tonum($row[5]));
                     push(@os_waits,   tonum($row[11]));
                 }
-
                 # TRANSACTIONS
                 elsif ($line =~ m/Trx id counter/) {
-
                     # The beginning of the TRANSACTIONS section: start counting
                     # transactions
+                    # Trx id counter 0 1170664159
+                    # Trx id counter 861B144C
                     @innodb_txn = ($row[3], $row[4]);
+                    $txn_seen = 1;
                 }
                 elsif ($line =~ m/Purge done for trx/) {
-
-                    # PHP can't do big math, so I send it to MySQL.
-                    @innodb_prg = ($row[6], $row[7]);
+                    # Purge done for trx's n:o < 0 1170663853 undo n:o < 0 0
+                    # Purge done for trx's n:o < 861B135D undo n:o < 0
+                    @innodb_prg = ($row[6], $row[7] eq 'undo' ? undef : $row[7]);
                 }
                 elsif ($line =~ m/History list length/) {
                     $status{'history_list'} = tonum($row[3]);
                 }
-                elsif (scalar @innodb_txn > 0 && $line =~ m/---TRANSACTION/) {
+                elsif ($txn_seen && $line =~ m/---TRANSACTION/) {
                     $status{'current_transactions'} += 1;
                     if ($line =~ m/ACTIVE/) {
                         $status{'active_transactions'} += 1;
                     }
                 }
-                elsif (scalar @innodb_txn > 0 && $line =~ m/LOCK WAIT/) {
+                elsif ($txn_seen && $line =~ m/LOCK WAIT/) {
                     $status{'locked_transactions'} += 1;
                 }
                 elsif ($line =~ m/read views open inside/) {
                     $status{'read_views'} = tonum($row[0]);
                 }
-
                 # FILE I/O
                 elsif ($line =~ m/OS file reads/) {
                     $status{'file_reads'}  = tonum($row[0]);
@@ -477,14 +478,12 @@ sub fetch_mysql_data {
                     $status{'pending_log_flushes'}      = tonum($row[4]);
                     $status{'pending_buf_pool_flushes'} = tonum($row[7]);
                 }
-
                 # INSERT BUFFER AND ADAPTIVE HASH INDEX
                 elsif ($line =~ m/merged recs/) {
                     $status{'ibuf_inserts'} = tonum($row[0]);
                     $status{'ibuf_merged'}  = tonum($row[2]);
                     $status{'ibuf_merges'}  = tonum($row[5]);
                 }
-
                 # LOG
                 elsif ($line =~ m/log i\/o's done/) {    #'
                     $status{'log_writes'} = tonum($row[0]);
@@ -494,12 +493,16 @@ sub fetch_mysql_data {
                     $status{'pending_chkp_writes'} = tonum($row[4]);
                 }
                 elsif ($line =~ m/Log sequence number/) {
-                    @innodb_lsn = ($row[3], $row[4]);
+                    # This number is NOT printed in hex in InnoDB plugin.
+                    # Log sequence number 13093949495856 //plugin
+                    # Log sequence number 125 3934414864 //normal
+                    $innodb_lsn = defined($row[4]) ? make_bigint_sql($row[3], $row[4]) : tonum($row[3]);
                 }
                 elsif ($line =~ m/Log flushed up to/) {
-                    # Since Perl can't handle 64-bit numbers, we'll ask MySQL to do it for
-                    # us instead.    And we get it to cast them to strings, too.
-                    @flushed_to = ($row[4], $row[5]);
+                    # This number is NOT printed in hex in InnoDB plugin.
+                    # Log flushed up to   13093948219327
+                    # Log flushed up to   125 3934414864
+                    $flushed_to = defined($row[5]) ? make_bigint_sql($row[4], $row[5]) : tonum($row[4]);
                 }
 
                 # BUFFER POOL AND MEMORY
@@ -540,14 +543,12 @@ sub fetch_mysql_data {
         # too big for it.
         if (scalar @innodb_txn) {
             my $txn = make_bigint_sql($innodb_txn[0], $innodb_txn[1]);
-            my $lsn = make_bigint_sql($innodb_lsn[0], $innodb_lsn[1]);
-            my $flu = make_bigint_sql($flushed_to[0], $flushed_to[1]);
             my $prg = make_bigint_sql($innodb_prg[0], $innodb_prg[1]);
             my $sql = "SELECT CONCAT('', $txn) AS innodb_transactions, "
               . "CONCAT('', ($txn - $prg)) AS unpurged_txns, "
-              . "CONCAT('', $lsn) AS log_bytes_written, "
-              . "CONCAT('', $flu) AS log_bytes_flushed, "
-              . "CONCAT('', ($lsn - $flu)) AS unflushed_log, "
+              . "CONCAT('', $innodb_lsn) AS log_bytes_written, "
+              . "CONCAT('', $flushed_to) AS log_bytes_flushed, "
+              . "CONCAT('', ($innodb_lsn - $flushed_to)) AS unflushed_log, "
               . "CONCAT('', ". join('+', @spin_waits). ") AS spin_waits, "
               . "CONCAT('', ". join('+', @spin_rounds). ") AS spin_rounds, "
               . "CONCAT('', ". join('+', @os_waits). ") AS os_waits";
