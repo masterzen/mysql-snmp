@@ -261,9 +261,7 @@ my %oids    = ();
 my $lowestOid;
 my $highestOid;
 my @ks;
-
-# enterprises.20267.200.1
-my $regOID = new NetSNMP::OID($opt{oid});
+my $regOID; 
 
 # various types & definitions
 my @types = (
@@ -741,6 +739,7 @@ sub run
 
     daemonize() if !$opt{'no-daemon'};
 
+    $regOID = new NetSNMP::OID($opt{oid});
     $agent->register("mysql", $regOID, \&my_snmp_handler);
 
     # build the oids table
