@@ -21,9 +21,208 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
+use strict;
+
 my $VERSION = "0.8";
 $VERSION = eval $VERSION;
 
+## Packages ##
+package InnoDBParser;
+
+use strict;
+use warnings;
+use bigint;
+use Data::Dumper;
+
+sub new {
+   bless {}, shift;
+}
+
+sub parse_innodb_status {
+    my $self = shift;
+    my $lines = shift;
+    my %status = (
+        'current_transactions' => 0,
+        'locked_transactions'  => 0,
+        'active_transactions'  => 0,
+    );
+    my $flushed_to;
+    my $innodb_lsn;
+    my $purged_to;
+    my @spin_waits;
+    my @spin_rounds;
+    my @os_waits;
+    my $txn_seen = 0;
+    
+    foreach my $line (@$lines) {
+        my @row = split(/ +/, $line);
+
+        # SEMAPHORES
+        if ($line =~ m/Mutex spin waits/) {
+            push(@spin_waits,  $self->tonum($row[3]));
+            push(@spin_rounds, $self->tonum($row[5]));
+            push(@os_waits,    $self->tonum($row[8]));
+        }
+        elsif ($line =~ m/RW-shared spins/) {
+            push(@spin_waits, $self->tonum($row[2]));
+            push(@spin_waits, $self->tonum($row[8]));
+            push(@os_waits,   $self->tonum($row[5]));
+            push(@os_waits,   $self->tonum($row[11]));
+        }
+        # TRANSACTIONS
+        elsif ($line =~ m/Trx id counter/) {
+            # The beginning of the TRANSACTIONS section: start counting
+            # transactions
+            # Trx id counter 0 1170664159
+            # Trx id counter 861B144C
+            $status{'innodb_transactions'} = $self->make_bigint($row[3], $row[4]);
+            $txn_seen = 1;
+        }
+        elsif ($line =~ m/Purge done for trx/) {
+            # Purge done for trx's n:o < 0 1170663853 undo n:o < 0 0
+            # Purge done for trx's n:o < 861B135D undo n:o < 0
+            $purged_to = $self->make_bigint($row[6], $row[7] eq 'undo' ? undef : $row[7]);
+            $status{'unpurged_txns'} = $status{'innodb_transactions'} - $purged_to;
+        }
+        elsif ($line =~ m/History list length/) {
+            $status{'history_list'} = $self->tonum($row[3]);
+        }
+        elsif ($txn_seen && $line =~ m/---TRANSACTION/) {
+            $status{'current_transactions'} = $status{'current_transactions'} + 1;
+            if ($line =~ m/ACTIVE/) {
+                $status{'active_transactions'} = $status{'active_transactions'} + 1;
+            }
+        }
+        elsif ($txn_seen && $line =~ m/LOCK WAIT/) {
+            $status{'locked_transactions'} = $status{'locked_transactions'} + 1;
+        }
+        elsif ($line =~ m/read views open inside/) {
+            $status{'read_views'} = $self->tonum($row[0]);
+        }
+        # FILE I/O
+        elsif ($line =~ m/OS file reads/) {
+            $status{'file_reads'}  = $self->tonum($row[0]);
+            $status{'file_writes'} = $self->tonum($row[4]);
+            $status{'file_fsyncs'} = $self->tonum($row[8]);
+        }
+        elsif ($line =~ m/Pending normal aio/) {
+            $status{'pending_normal_aio_reads'}  = $self->tonum($row[4]);
+            $status{'pending_normal_aio_writes'} = $self->tonum($row[7]);
+        }
+        elsif ($line =~ m/ibuf aio reads/) {
+            $status{'pending_ibuf_aio_reads'} = $self->tonum($row[4]);
+            $status{'pending_aio_log_ios'}    = $self->tonum($row[7]);
+            $status{'pending_aio_sync_ios'}   = $self->tonum($row[10]);
+        }
+        elsif ($line =~ m/Pending flushes \(fsync\)/) {
+            $status{'pending_log_flushes'}      = $self->tonum($row[4]);
+            $status{'pending_buf_pool_flushes'} = $self->tonum($row[7]);
+        }
+        # INSERT BUFFER AND ADAPTIVE HASH INDEX
+        elsif ($line =~ m/merged recs/) {
+            $status{'ibuf_inserts'} = $self->tonum($row[0]);
+            $status{'ibuf_merged'}  = $self->tonum($row[2]);
+            $status{'ibuf_merges'}  = $self->tonum($row[5]);
+        }
+        # LOG
+        elsif ($line =~ m/log i\/o's done/) {    #'
+            $status{'log_writes'} = $self->tonum($row[0]);
+        }
+        elsif ($line =~ m/pending log writes/) {
+            $status{'pending_log_writes'}  = $self->tonum($row[0]);
+            $status{'pending_chkp_writes'} = $self->tonum($row[4]);
+        }
+        elsif ($line =~ m/Log sequence number/) {
+            # This number is NOT printed in hex in InnoDB plugin.
+            # Log sequence number 13093949495856 //plugin
+            # Log sequence number 125 3934414864 //normal
+            $innodb_lsn = defined($row[4]) ? $self->make_bigint($row[3], $row[4]) : $self->tonum($row[3]);
+        }
+        elsif ($line =~ m/Log flushed up to/) {
+            # This number is NOT printed in hex in InnoDB plugin.
+            # Log flushed up to   13093948219327
+            # Log flushed up to   125 3934414864
+            $flushed_to = defined($row[5]) ? $self->make_bigint($row[4], $row[5]) : $self->tonum($row[4]);
+        }
+
+        # BUFFER POOL AND MEMORY
+        elsif ($line =~ m/Buffer pool size /) {
+            # The " " after size is necessary to avoid matching the wrong line:
+            # Buffer pool size        1769471
+            # Buffer pool size, bytes 28991012864
+            $status{'pool_size'} = $self->tonum($row[3]);
+        }
+        elsif ($line =~ m/Free buffers/) {
+            $status{'free_pages'} = $self->tonum($row[2]);
+        }
+        elsif ($line =~ m/Database pages/) {
+            $status{'database_pages'} = $self->tonum($row[2]);
+        }
+        elsif ($line =~ m/Modified db pages/) {
+            $status{'modified_pages'} = $self->tonum($row[3]);
+        }
+        elsif ($line =~ m/Pages read/) {
+            $status{'pages_read'}    = $self->tonum($row[2]);
+            $status{'pages_created'} = $self->tonum($row[4]);
+            $status{'pages_written'} = $self->tonum($row[6]);
+        }
+        # ROW OPERATIONS
+        elsif ($line =~ m/Number of rows inserted/) {
+            $status{'rows_inserted'} = $self->tonum($row[4]);
+            $status{'rows_updated'}  = $self->tonum($row[6]);
+            $status{'rows_deleted'}  = $self->tonum($row[8]);
+            $status{'rows_read'}     = $self->tonum($row[10]);
+        }
+        elsif ($line =~ m/queries inside InnoDB/) {
+            $status{'queries_inside'} = $self->tonum($row[0]);
+            $status{'queries_queued'} = $self->tonum($row[4]);
+        }
+    }
+
+    # Derive some values from other values.
+    $status{'unflushed_log'} = $innodb_lsn - $flushed_to;
+    $status{'log_bytes_written'} = $innodb_lsn; 
+    $status{'log_bytes_flushed'} = $flushed_to;
+    
+    foreach my $val (@spin_waits) {
+        $status{'spin_waits'} += $val;
+    }
+
+    foreach my $val (@spin_rounds) {
+        $status{'spin_rounds'} += $val;
+    }
+
+    foreach my $val (@os_waits) {
+        $status{'os_waits'} += $val;
+    }
+    return \%status;
+}
+
+# takes only numbers from a string
+sub tonum {
+    my $self = shift;
+    my $str = shift;
+    return 0 if !$str;
+    return $1 if $str =~ m/(\d+)/;
+    return 0;
+}
+
+# return a 64 bit number from either an hex encoding or
+# a hi lo representation
+sub make_bigint {
+    my ($self, $hi, $lo) = @_;
+	unless ($lo) {
+	    return hex($hi);
+    }
+    return $hi * 4294967296 + $lo;
+}
+no bigint;
+# end of package InnoDBParser
+
+package main;
+
+# Unfortunately Getopt::Long is not compatible with bigint
+no bigint;
 use strict;
 use warnings;
 use Carp;
@@ -41,10 +240,6 @@ use DBI;
 use DBD::mysql;
 use Pod::Usage;
 
-netsnmp_ds_set_boolean(NETSNMP_DS_APPLICATION_ID, NETSNMP_DS_AGENT_NO_ROOT_ACCESS, 1);
-
-my $agent = new NetSNMP::agent('Name' => 'mysql', 'AgentX' => 1);
-
 my %opt = (
     daemon_pid => '/var/run/mysql-agent.pid',
     oid        => '1.3.6.1.4.1.20267.200.1',
@@ -57,59 +252,18 @@ my %opt = (
 	heartbeat  => ''
 );
 
-GetOptions(
-    \%opt,
-    'host|h=s',
-    'port|P=i',
-    'user|u=s',
-    'password|p=s',
-    'config|c=s',
-    'master|m!',
-    'slave|s!',
-    'innodb|i!',
-    'oid|o',
-    'refresh|r=i',
-    'daemon_pid|daemon-pid=s',
-    'heartbeat|b=s',
-    'no-daemon',
-    'man',
-    'usage',
-    'verbose|v+',
-    "version" => sub {VersionMessage()},
-) or pod2usage(-verbose => 0);
-
-pod2usage(-verbose => 0) if $opt{usage};
-pod2usage(-verbose => 1) if $opt{help};
-pod2usage(-verbose => 2) if $opt{man};
-
-sub VersionMessage {
-    print "mysql-agent $VERSION by brice.figureau\@daysofwonder.com\n";
-}
-
-my $debugging = $opt{verbose};
-my $subagent  = 0;
-
-my $dsn = 'DBI:mysql:';
-if ($opt{config}) {
-    $dsn .= "mysql_read_default_file=$opt{config}";
-}
-else {
-    $dsn .= join(';', "host=$opt{host}", "port=$opt{port}");
-}
-
-my $running = 0;
-my $error   = 0;
-
-openlog("mysql-agent", LOG_PID | LOG_PERROR, LOG_DAEMON);
-
-daemonize() if !$opt{'no-daemon'};
-
 my %global_status       = ();
 my $global_last_refresh = 0;
+my $running = 0;
+my $error   = 0;
+# this will hold a table of conversion between numerical oids and oidnames
+my %oids    = ();
+my $lowestOid;
+my $highestOid;
+my @ks;
 
 # enterprises.20267.200.1
 my $regOID = new NetSNMP::OID($opt{oid});
-$agent->register("mysql", $regOID, \&my_snmp_handler);
 
 # various types & definitions
 my @types = (
@@ -256,52 +410,7 @@ my @oldkeys = (
     'Binlog_cache_use',           'binary_log_space',
 );
 
-# this will hold a table of conversion between numerical oids and oidnames
-my %oids = ();
-
-# build the oids table
-my $i = 1;
-foreach my $oidname (@newkeys) {
-    $oids{$regOID . ".$i.0"} = {
-        'name' => $oidname,
-        'oid'  => new NetSNMP::OID($regOID . ".$i.0")
-    };
-    $i++;
-}
-
-# this contains a lexicographycally sorted oids array
-my @ks = sort {$a <=> $b} map {$_ = new NetSNMP::OID($_)} keys %oids;
-my $lowestOid  = $ks[0];
-my $highestOid = $ks[$#ks];
-
-if ($debugging) {
-    foreach my $k (@ks) {
-        dolog(LOG_DEBUG, "$k -> " . $oids{$k}->{'name'});
-    }
-}
-
-# takes only numbers from a string
-sub tonum {
-    my $str = shift;
-    return 0 if !$str;
-    return $1 if $str =~ m/(\d+)/;
-    return 0;
-}
-
-# return a string to build a 64 bit number
-sub make_bigint_sql {
-    my ($hi, $lo) = @_;
-	unless ($lo) {
-	    return "(CONV('$hi', 16, 10))";
-    }
-    return "(($hi << 32) + $lo)";
-}
-
-sub max {
-    my ($a, $b) = @_;
-    return $a if $a > $b;
-    return $b;
-}
+run() unless caller();
 
 # daemonize the program
 sub daemonize {
@@ -322,6 +431,12 @@ sub daemonize {
     open STDERR, '>&STDOUT' or die "mysql-agent: can't dup stdout: $!";
 }
 
+sub max {
+    my ($a, $b) = @_;
+    return $a if $a > $b;
+    return $b;
+}
+
 # This function has been translated from PHP to Perl from the
 # excellent Baron Schwartz's MySQL Cacti Templates
 sub fetch_mysql_data {
@@ -338,9 +453,6 @@ sub fetch_mysql_data {
             'transactions'         => 0,
             'relay_log_space'      => 0,
             'binary_log_space'     => 0,
-            'current_transactions' => 0,
-            'locked_transactions'  => 0,
-            'active_transactions'  => 0,
             'slave_lag'            => 0,
             'slave_running'        => 0,
             'slave_stopped'        => 0
@@ -402,173 +514,23 @@ sub fetch_mysql_data {
         }
 
         # Get SHOW INNODB STATUS and extract the desired metrics from it.
-        my @innodb_txn = ();
-        my $flushed_to;
-        my $innodb_lsn;
-        my @innodb_prg = ();
-        my @spin_waits;
-        my @spin_rounds;
-        my @os_waits;
-        my $txn_seen = 0;
-
         if ($opt{innodb} && $status{'have_innodb'} eq 'YES') {
             my $innodb_array = $dbh->selectall_arrayref("SHOW /*!50000 ENGINE*/ INNODB STATUS",{Slice => {}});
             my @lines = split("\n", $innodb_array->[0]{'Status'});
-
-            foreach my $line (@lines) {
-                my @row = split(/ +/, $line);
-
-                # SEMAPHORES
-                if ($line =~ m/Mutex spin waits/) {
-                    push(@spin_waits,  tonum($row[3]));
-                    push(@spin_rounds, tonum($row[5]));
-                    push(@os_waits,    tonum($row[8]));
-                }
-                elsif ($line =~ m/RW-shared spins/) {
-                    push(@spin_waits, tonum($row[2]));
-                    push(@spin_waits, tonum($row[8]));
-                    push(@os_waits,   tonum($row[5]));
-                    push(@os_waits,   tonum($row[11]));
-                }
-                # TRANSACTIONS
-                elsif ($line =~ m/Trx id counter/) {
-                    # The beginning of the TRANSACTIONS section: start counting
-                    # transactions
-                    # Trx id counter 0 1170664159
-                    # Trx id counter 861B144C
-                    @innodb_txn = ($row[3], $row[4]);
-                    $txn_seen = 1;
-                }
-                elsif ($line =~ m/Purge done for trx/) {
-                    # Purge done for trx's n:o < 0 1170663853 undo n:o < 0 0
-                    # Purge done for trx's n:o < 861B135D undo n:o < 0
-                    @innodb_prg = ($row[6], $row[7] eq 'undo' ? undef : $row[7]);
-                }
-                elsif ($line =~ m/History list length/) {
-                    $status{'history_list'} = tonum($row[3]);
-                }
-                elsif ($txn_seen && $line =~ m/---TRANSACTION/) {
-                    $status{'current_transactions'} += 1;
-                    if ($line =~ m/ACTIVE/) {
-                        $status{'active_transactions'} += 1;
-                    }
-                }
-                elsif ($txn_seen && $line =~ m/LOCK WAIT/) {
-                    $status{'locked_transactions'} += 1;
-                }
-                elsif ($line =~ m/read views open inside/) {
-                    $status{'read_views'} = tonum($row[0]);
-                }
-                # FILE I/O
-                elsif ($line =~ m/OS file reads/) {
-                    $status{'file_reads'}  = tonum($row[0]);
-                    $status{'file_writes'} = tonum($row[4]);
-                    $status{'file_fsyncs'} = tonum($row[8]);
-                }
-                elsif ($line =~ m/Pending normal aio/) {
-                    $status{'pending_normal_aio_reads'}  = tonum($row[4]);
-                    $status{'pending_normal_aio_writes'} = tonum($row[7]);
-                }
-                elsif ($line =~ m/ibuf aio reads/) {
-                    $status{'pending_ibuf_aio_reads'} = tonum($row[4]);
-                    $status{'pending_aio_log_ios'}    = tonum($row[7]);
-                    $status{'pending_aio_sync_ios'}   = tonum($row[10]);
-                }
-                elsif ($line =~ m/Pending flushes \(fsync\)/) {
-                    $status{'pending_log_flushes'}      = tonum($row[4]);
-                    $status{'pending_buf_pool_flushes'} = tonum($row[7]);
-                }
-                # INSERT BUFFER AND ADAPTIVE HASH INDEX
-                elsif ($line =~ m/merged recs/) {
-                    $status{'ibuf_inserts'} = tonum($row[0]);
-                    $status{'ibuf_merged'}  = tonum($row[2]);
-                    $status{'ibuf_merges'}  = tonum($row[5]);
-                }
-                # LOG
-                elsif ($line =~ m/log i\/o's done/) {    #'
-                    $status{'log_writes'} = tonum($row[0]);
-                }
-                elsif ($line =~ m/pending log writes/) {
-                    $status{'pending_log_writes'}  = tonum($row[0]);
-                    $status{'pending_chkp_writes'} = tonum($row[4]);
-                }
-                elsif ($line =~ m/Log sequence number/) {
-                    # This number is NOT printed in hex in InnoDB plugin.
-                    # Log sequence number 13093949495856 //plugin
-                    # Log sequence number 125 3934414864 //normal
-                    $innodb_lsn = defined($row[4]) ? make_bigint_sql($row[3], $row[4]) : tonum($row[3]);
-                }
-                elsif ($line =~ m/Log flushed up to/) {
-                    # This number is NOT printed in hex in InnoDB plugin.
-                    # Log flushed up to   13093948219327
-                    # Log flushed up to   125 3934414864
-                    $flushed_to = defined($row[5]) ? make_bigint_sql($row[4], $row[5]) : tonum($row[4]);
-                }
-
-                # BUFFER POOL AND MEMORY
-                elsif ($line =~ m/Buffer pool size/) {
-                    $status{'pool_size'} = tonum($row[3]);
-                }
-                elsif ($line =~ m/Free buffers/) {
-                    $status{'free_pages'} = tonum($row[2]);
-                }
-                elsif ($line =~ m/Database pages/) {
-                    $status{'database_pages'} = tonum($row[2]);
-                }
-                elsif ($line =~ m/Modified db pages/) {
-                    $status{'modified_pages'} = tonum($row[3]);
-                }
-                elsif ($line =~ m/Pages read/) {
-                    $status{'pages_read'}    = tonum($row[2]);
-                    $status{'pages_created'} = tonum($row[4]);
-                    $status{'pages_written'} = tonum($row[6]);
-                }
-                # ROW OPERATIONS
-                elsif ($line =~ m/Number of rows inserted/) {
-                    $status{'rows_inserted'} = tonum($row[4]);
-                    $status{'rows_updated'}  = tonum($row[6]);
-                    $status{'rows_deleted'}  = tonum($row[8]);
-                    $status{'rows_read'}     = tonum($row[10]);
-                }
-                elsif ($line =~ m/queries inside InnoDB/) {
-                    $status{'queries_inside'} = tonum($row[0]);
-                    $status{'queries_queued'} = tonum($row[4]);
-                }
+            
+            my $innodb_parser = InnoDBParser->new();
+            my $out = $innodb_parser->parse_innodb_status(\@lines);
+            foreach my $key (keys %$out) {
+                $status{$key} = $out->{$key};
             }
+
+            $status{'unflushed_log'} = max($status{'unflushed_log'}, $status{'innodb_log_buffer_size'});
         }
 
-        # Derive some values from other values.
-
-        # PHP sucks at bigint math, so we use MySQL to calculate things that are
-        # too big for it.
-        if (scalar @innodb_txn) {
-            my $txn = make_bigint_sql($innodb_txn[0], $innodb_txn[1]);
-            my $prg = make_bigint_sql($innodb_prg[0], $innodb_prg[1]);
-            my $sql = "SELECT CONCAT('', $txn) AS innodb_transactions, "
-              . "CONCAT('', ($txn - $prg)) AS unpurged_txns, "
-              . "CONCAT('', $innodb_lsn) AS log_bytes_written, "
-              . "CONCAT('', $flushed_to) AS log_bytes_flushed, "
-              . "CONCAT('', ($innodb_lsn - $flushed_to)) AS unflushed_log, "
-              . "CONCAT('', ". join('+', @spin_waits). ") AS spin_waits, "
-              . "CONCAT('', ". join('+', @spin_rounds). ") AS spin_rounds, "
-              . "CONCAT('', ". join('+', @os_waits). ") AS os_waits";
-
-            $result = $dbh->selectall_arrayref($sql, {Slice => {}});
-            foreach my $row (@$result) {
-                foreach my $key (keys %$row) {
-                    $status{$key} = $row->{$key};
-                }
-            }
-            $status{'unflushed_log'} = max( $status{'unflushed_log'}, $status{'innodb_log_buffer_size'});
-        }
         if (scalar @binlogs) {
-            my $sql = "SELECT " . "CONCAT('', " . join('+', @binlogs) . ") AS binary_log_space ";
-
-            $result = $dbh->selectall_arrayref($sql, {Slice => {}});
-            foreach my $row (@$result) {
-                foreach my $key (keys %$row) {
-                    $status{$key} = $row->{$key};
-                }
+            $status{'binary_log_space'} = 0;
+            foreach my $log (@binlogs) {
+                $status{'binary_log_space'} += $log;
             }
         }
 
@@ -598,17 +560,18 @@ sub fetch_mysql_data {
 ###
 sub refresh_status {
     my $startOID = shift;
+    my $dsn      = shift;
     my $now      = time();
 
     # Check if we have been called quicker than once every $refresh
     if (($now - $global_last_refresh) < $opt{refresh}) {
         # if yes, do not do anything
-        dolog(LOG_DEBUG, "not refreshing: " . ($now - $global_last_refresh) . " < $opt{refresh}") if ($debugging);
+        dolog(LOG_DEBUG, "not refreshing: " . ($now - $global_last_refresh) . " < $opt{refresh}") if ($opt{verbose});
         return;
     }
     my ($oid, $types, $status) = fetch_mysql_data($dsn, $opt{user}, $opt{password});
     if ($oid) {
-        dolog(LOG_DEBUG, "Setting error to 0") if ($debugging);
+        dolog(LOG_DEBUG, "Setting error to 0") if ($opt{verbose});
         $error = 0;
         my $index = 0;
         foreach my $key (@$oid) {
@@ -616,11 +579,11 @@ sub refresh_status {
             $global_status{$key}{'type'}  = $types->[$index];
             $index++;
         }
-        dolog(LOG_DEBUG, "Refreshed at $now " . (time() - $now)) if ($debugging);
-        print Dumper(\%global_status) if ($debugging);
+        dolog(LOG_DEBUG, "Refreshed at $now " . (time() - $now)) if ($opt{verbose});
+        print Dumper(\%global_status) if ($opt{verbose});
     }
     else {
-        dolog(LOG_DEBUG, "Setting error to 1") if ($debugging);
+        dolog(LOG_DEBUG, "Setting error to 1") if ($opt{verbose});
         $error = 1;
     }
 
@@ -664,7 +627,7 @@ sub set_value {
 
         my $value = $global_status{$oidname}{'value'};
         if (defined $value) {
-            if ($debugging) {
+            if ($opt{verbose}) {
                 dolog(LOG_DEBUG, "$oid -> $lowestOid");
                 dolog(LOG_DEBUG, "  -> ($oidname) $value");
             }
@@ -688,9 +651,9 @@ sub my_snmp_handler {
         my $value;
         my $next;
 
-        dolog(LOG_DEBUG, "asking for oid $oid (mode $mode)") if ($debugging);
+        dolog(LOG_DEBUG, "asking for oid $oid (mode $mode)") if ($opt{verbose});
         if ($error) {
-            dolog(LOG_DEBUG, "error for oid $oid (mode $mode)") if ($debugging);
+            dolog(LOG_DEBUG, "error for oid $oid (mode $mode)") if ($opt{verbose});
             $request->setError($request_info, SNMP_ERR_NOSUCHNAME);
             next;
         }
@@ -716,35 +679,107 @@ sub my_snmp_handler {
 
                 #got one to return
                 if (defined $oidToUse) {
-                    dolog(LOG_DEBUG, "Next oid to $oid is $oidToUse") if ($debugging);
+                    dolog(LOG_DEBUG, "Next oid to $oid is $oidToUse") if ($opt{verbose});
                     set_value($request, $oidToUse);
                 }
             }
         }
     }
-    dolog(LOG_DEBUG, "finished processing") if ($debugging);
+    dolog(LOG_DEBUG, "finished processing") if ($opt{verbose});
 }
 
 sub dolog {
     my ($level, $msg) = @_;
     syslog($level, $msg);
-    print STDERR $msg . "\n" if ($debugging);
+    print STDERR $msg . "\n" if ($opt{verbose});
 }
 
-# We need to perform a loop here waiting for snmp requests.     We
-# also check for new STATUS data.
-$SIG{'INT'}  = \&shut_it_down;
-$SIG{'QUIT'} = \&shut_it_down;
-$SIG{'TERM'} = \&shut_it_down;
-$running = 1;
-
-while ($running) {
-    refresh_status($opt{oid});
-    $agent->agent_check_and_process(1);    # 1 = block
+sub VersionMessage {
+    print "mysql-agent $VERSION by brice.figureau\@daysofwonder.com\n";
 }
-$agent->shutdown();
 
-dolog(LOG_INFO, "agent shutdown");
+sub run 
+{
+    netsnmp_ds_set_boolean(NETSNMP_DS_APPLICATION_ID, NETSNMP_DS_AGENT_NO_ROOT_ACCESS, 1);
+    my $agent = new NetSNMP::agent('Name' => 'mysql', 'AgentX' => 1);
+
+    GetOptions(
+        \%opt,
+        'host|h=s',
+        'port|P=i',
+        'user|u=s',
+        'password|p=s',
+        'config|c=s',
+        'master|m!',
+        'slave|s!',
+        'innodb|i!',
+        'oid|o',
+        'refresh|r=i',
+        'daemon_pid|daemon-pid=s',
+        'heartbeat|b=s',
+        'no-daemon',
+        'man',
+        'usage',
+        'verbose|v+',
+        "version" => sub {VersionMessage()},
+    ) or pod2usage(-verbose => 0);
+
+    pod2usage(-verbose => 0) if $opt{usage};
+    pod2usage(-verbose => 1) if $opt{help};
+    pod2usage(-verbose => 2) if $opt{man};
+
+    my $subagent  = 0;
+    my $dsn = 'DBI:mysql:';
+    if ($opt{config}) {
+        $dsn .= "mysql_read_default_file=$opt{config}";
+    }
+    else {
+        $dsn .= join(';', "host=$opt{host}", "port=$opt{port}");
+    }
+
+    openlog("mysql-agent", LOG_PID | LOG_PERROR, LOG_DAEMON);
+
+    daemonize() if !$opt{'no-daemon'};
+
+    $agent->register("mysql", $regOID, \&my_snmp_handler);
+
+    # build the oids table
+    my $i = 1;
+    foreach my $oidname (@newkeys) {
+        $oids{$regOID . ".$i.0"} = {
+            'name' => $oidname,
+            'oid'  => new NetSNMP::OID($regOID . ".$i.0")
+        };
+        $i++;
+    }
+
+    # this contains a lexicographycally sorted oids array
+    @ks = sort {$a <=> $b} map {$_ = new NetSNMP::OID($_)} keys %oids;
+    $lowestOid  = $ks[0];
+    $highestOid = $ks[$#ks];
+
+    if ($opt{verbose}) {
+        foreach my $k (@ks) {
+            dolog(LOG_DEBUG, "$k -> " . $oids{$k}->{'name'});
+        }
+    }
+
+
+    # We need to perform a loop here waiting for snmp requests.     We
+    # also check for new STATUS data.
+    $SIG{'INT'}  = \&shut_it_down;
+    $SIG{'QUIT'} = \&shut_it_down;
+    $SIG{'TERM'} = \&shut_it_down;
+    $running = 1;
+
+    while ($running) {
+        refresh_status($opt{oid}, $dsn);
+        $agent->agent_check_and_process(1);    # 1 = block
+    }
+    $agent->shutdown();
+
+    dolog(LOG_INFO, "agent shutdown");
+}
 
 __END__
 

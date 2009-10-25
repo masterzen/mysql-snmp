@@ -1,0 +1,106 @@
+=====================================
+091025 18:41:22 INNODB MONITOR OUTPUT
+=====================================
+Per second averages calculated from the last 37 seconds
+----------
+BACKGROUND THREAD
+----------
+fsync callers: 2619824 buffer pool, 3297 other, 3800 checkpoint, 163262 log aio, 20486075 log sync, 0 archive
+----------
+SEMAPHORES
+----------
+OS WAIT ARRAY INFO: reservation count 1042873, signal count 11947106
+Mutex spin waits 20341276, rounds 22315875, OS waits 588891
+RW-shared spins 1956750, OS waits 199142; RW-excl spins 316353, OS waits 185734
+Spin rounds per wait: 1.10 mutex, 2.97 RW-shared, 121.05 RW-excl
+--------
+FILE I/O
+--------
+I/O thread 0 state: waiting for i/o request (insert buffer thread)
+I/O thread 1 state: waiting for i/o request (log thread)
+I/O thread 2 state: waiting for i/o request (read thread)
+I/O thread 3 state: waiting for i/o request (write thread)
+Pending normal aio reads: 0, aio writes: 0,
+ ibuf aio reads: 0, log i/o's: 0, sync i/o's: 0
+Pending flushes (fsync) log: 0; buffer pool: 0
+272402 OS file reads, 27233782 OS file writes, 23274147 OS fsyncs
+0.00 reads/s, 0 avg bytes/read, 20.92 writes/s, 16.68 fsyncs/s
+-------------------------------------
+INSERT BUFFER AND ADAPTIVE HASH INDEX
+-------------------------------------
+Ibuf: size 1, free list len 938, seg size 940,
+32096 inserts, 32096 merged recs, 8361 merges
+Hash table size 14874961, used cells 14734156, node heap has 102174 buffer(s)
+14893.19 hash searches/s, 4092.21 non-hash searches/s
+---
+LOG
+---
+Log sequence number 5530 426781264
+Log flushed up to   5530 426781264
+Last checkpoint at  5530 398691916
+Max checkpoint age  434154333
+Modified age        28089348
+Checkpoint age      28089348
+0 pending log writes, 0 pending chkp writes
+20653125 log i/o's done, 15.38 log i/o's/second, 20486075 syncs, 165739 checkpoints
+log sync callers: 19427013 buffer pool, background 11690896 sync and 0 async, 1 internal, checkpoint 165739 sync and 0 async, 0 archive, commit 20289975 sync and 0 async
+log sync syncers: 20480 buffer pool, background 180806 sync and 0 async, 0 internal, checkpoint 1 sync and 0 async, 0 archive, commit 20284788 sync and 0 async
+----------------------
+BUFFER POOL AND MEMORY
+----------------------
+Total memory allocated 8288835892; in additional pool allocated 0
+Internal hash tables (constant factor + variable factor)
+    Adaptive hash index 1793022712      (118999688 + 1674023024)
+    Page hash           7438328
+    Dictionary cache    617837272       (89251896 + 528585376)
+    File system         254712  (82672 + 172040)
+    Lock system         18597480        (18594536 + 2944)
+    Recovery system     0       (0 + 0)
+    Threads             408056  (406936 + 1120)
+    innodb_io_pattern   0       (0 + 0)
+Buffer pool size        458752
+Buffer pool size, bytes 7516192768
+Free buffers            7462
+Database pages          349116
+Modified db pages       659
+Pending reads 0
+Pending writes: LRU 0, flush list 0, single page 0
+Pages read 334381, created 16470, written 19427013
+0.00 reads/s, 0.00 creates/s, 9.30 writes/s
+Buffer pool hit rate 1000 / 1000
+--------------
+ROW OPERATIONS
+--------------
+0 queries inside InnoDB, 0 queries in queue
+1 read views open inside InnoDB
+Main thread process no. 8130, id 1141348688, state: sleeping
+Number of rows inserted 5329910189, updated 4561332, deleted 1462834, read 40270926191
+3416.93 inserts/s, 4.68 updates/s, 0.14 deletes/s, 32303.29 reads/s
+------------
+TRANSACTIONS
+------------
+Trx id counter 1 772208351
+Purge done for trx's n:o < 1 772207876 undo n:o < 0 0
+History list length 141
+Total number of lock structs in row lock hash table 0
+LIST OF TRANSACTIONS FOR EACH SESSION:
+---TRANSACTION 0 0, not started, process no 8130, OS thread id 1143916880
+MySQL thread id 2778065, query id 81648549 192.168.168.14 dbadmin
+show innodb status
+---TRANSACTION 1 772207164, not started, process no 8130, OS thread id 1143781712
+MySQL thread id 2777533, query id 81647292 192.168.168.24 dbgames
+---TRANSACTION 1 772207729, not started, process no 8130, OS thread id 1144187216
+MySQL thread id 2774013, query id 81647479 192.168.168.24 dbgames
+---TRANSACTION 1 772208346, not started, process no 8130, OS thread id 1145133392
+MySQL thread id 2707254, query id 81648218 192.168.168.24 dbgames
+---TRANSACTION 1 772208308, not started, process no 8130, OS thread id 1142970704
+MySQL thread id 12, query id 81648135 192.168.168.11 dbgames
+---TRANSACTION 1 772208310, not started, process no 8130, OS thread id 1142835536
+MySQL thread id 11, query id 81648138 192.168.168.11 dbgames
+---TRANSACTION 1 772208299, not started, process no 8130, OS thread id 1142700368
+MySQL thread id 10, query id 81648131 192.168.168.11 dbgames
+---TRANSACTION 1 772208296, not started, process no 8130, OS thread id 1142294864
+MySQL thread id 7, query id 81648120 192.168.168.11 dbgames
+----------------------------
+END OF INNODB MONITOR OUTPUT
+============================
