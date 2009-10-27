@@ -505,6 +505,11 @@ sub fetch_mysql_data {
             $status{$row->[0]} = $row->[1];
         }
 
+        # Make table_open_cache backwards-compatible.
+        if ( defined($status{'table_open_cache'}) ) {
+           $status{'table_cache'} = $status{'table_open_cache'};
+        }
+
         if ($opt{slave}) {
 			$result = $dbh->selectall_arrayref("SHOW SLAVE STATUS", { Slice => {} });
 
