@@ -932,4 +932,131 @@ myBinaryLogSpace OBJECT-TYPE
     "Total size of all binlogs"
     ::= { myStatus 108 }
 
-END
+myStateClosingTables OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in closing state"
+    ::= { myStatus 109 }
+
+myStateCopyingToTmpTable OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in copying to tmp table state"
+    ::= { myStatus 110 }
+
+myStateEnd OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in end state"
+    ::= { myStatus 111 }
+
+myStateFreeingItems OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in freeing items state"
+    ::= { myStatus 112 }
+
+myStateInit OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in init state"
+    ::= { myStatus 113 }
+
+myStateLocked OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in locked state"
+    ::= { myStatus 114 }
+
+myStateLogin OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in login state"
+    ::= { myStatus 115 }
+
+myStatePreparing OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in preparing state"
+    ::= { myStatus 116 }
+
+myStateReadingFromNet OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in reading from net state"
+    ::= { myStatus 117 }
+
+myStateSendingData OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in sending data state"
+    ::= { myStatus 118 }
+
+myStateSortingResult OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in sorting result state"
+    ::= { myStatus 119 }
+
+myStateStatistics OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in statistics state"
+    ::= { myStatus 120 }
+
+myStateUpdating OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in updating state"
+    ::= { myStatus 121 }
+
+myStateWritingToNet OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in writing to net state"
+    ::= { myStatus 122 }
+
+myStateNone OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in none state"
+    ::= { myStatus 123 }
+
+myStateOther OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of requests in other state"
+    ::= { myStatus 124 }
+

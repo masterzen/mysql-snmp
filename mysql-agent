@@ -248,6 +248,7 @@ my %opt = (
     master     => 1,
     slave      => 0,
     innodb     => 1,
+    procs      => 0,
 	host       => 'localhost',
 	heartbeat  => ''
 );
@@ -292,6 +293,10 @@ my @types = (
     'Counter32', 'Counter32', 'Counter32', 'Gauge32',
     'Gauge32',   'Counter64', 'Counter64', 'Counter32',
     'Gauge32',   'Counter32', 'Counter32', 'Counter32',
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
 );
 
 my @newkeys = (
@@ -349,6 +354,14 @@ my @newkeys = (
     'myLogBytesWritten',          'myRelayLogSpace',
     'myBinlogCacheSize',          'myBinlogCacheDiskUse',
     'myBinlogCacheUse',           'myBinaryLogSpace',
+    'myStateClosingTables',       'myStateCopyingToTmpTable' ,
+    'myStateEnd',                 'myStateFreeingItems',
+    'myStateInit',                'myStateLocked',
+    'myStateLogin',               'myStatePreparing',
+    'myStateReadingFromNet',      'myStateSendingData',
+    'myStateSortingResult',       'myStateStatistics',
+    'myStateUpdating',            'myStateWritingToNet',
+    'myStateNone',                'myStateOther'
 );
 
 my @oldkeys = (
@@ -406,6 +419,14 @@ my @oldkeys = (
     'log_bytes_written',          'relay_log_space',
     'binlog_cache_size',          'Binlog_cache_disk_use',
     'Binlog_cache_use',           'binary_log_space',
+    'State_closing_tables',       'State_copying_to_tmp_table' ,
+    'State_end',                  'State_freeing_items',
+    'State_init',                 'State_locked',
+    'State_login',                'State_preparing',
+    'State_reading_from_net',     'State_sending_data',
+    'State_sorting_result',       'State_statistics',
+    'State_updating',             'State_writing_to_net',
+    'State_none',                 'State_other', 
 );
 
 run() unless caller();
@@ -453,7 +474,23 @@ sub fetch_mysql_data {
             'binary_log_space'     => 0,
             'slave_lag'            => 0,
             'slave_running'        => 0,
-            'slave_stopped'        => 0
+            'slave_stopped'        => 0,
+            'State_closing_tables'       => 0,
+            'State_copying_to_tmp_table' => 0,
+            'State_end'                  => 0,
+            'State_freeing_items'        => 0,
+            'State_init'                 => 0,
+            'State_locked'               => 0,
+            'State_login'                => 0,
+            'State_preparing'            => 0,
+            'State_reading_from_net'     => 0,
+            'State_sending_data'         => 0,
+            'State_sorting_result'       => 0,
+            'State_statistics'           => 0,
+            'State_updating'             => 0,
+            'State_writing_to_net'       => 0,
+            'State_none'                 => 0,
+            'State_other'                => 0, 
         );
 
         my $result = $dbh->selectall_arrayref("SHOW /*!50002 GLOBAL */ STATUS");
@@ -523,6 +560,31 @@ sub fetch_mysql_data {
             }
 
             $status{'unflushed_log'} = max($status{'unflushed_log'}, $status{'innodb_log_buffer_size'});
+        }
+
+
+        # Get SHOW PROCESSLIST and aggregate it by state, then add it to the array
+        # too.
+        if ( $opt{procs} ) {
+            $result = $dbh->selectall_arrayref("SHOW PROCESSLIST",{Slice => {}});
+            foreach my $row (@$result) {
+                my %newrow = map {lc($_) => $row->{$_}} keys %$row;
+                my $state = $newrow{'State'};
+                if ( defined($state) ) {
+                    $state = 'NULL';
+                }
+                if ( $state == '' ) {
+                    $state = 'none';
+                }
+                $state = lc($state);
+                $state =~ s/ /_/;
+                if ( defined($status{"State_$state"}) ) {
+                    $status{"State_$state"} += 1;
+                }
+                else {
+                    $status{"State_other"} += 1;
+                }
+            }
         }
 
         if (scalar @binlogs) {
