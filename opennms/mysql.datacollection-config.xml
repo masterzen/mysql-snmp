@@ -113,6 +113,22 @@
   <mibObj oid=".1.3.6.1.4.1.20267.200.1.106" instance="0" alias="myBinlogCacheDiskUs" type="Counter32" />
   <mibObj oid=".1.3.6.1.4.1.20267.200.1.107" instance="0" alias="myBinlogCacheUse" type="Counter32" />
   <mibObj oid=".1.3.6.1.4.1.20267.200.1.108" instance="0" alias="myBinaryLogSpace" type="Counter32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.109" instance="0" alias="myStateClosingTabls" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.110" instance="0" alias="myStateCpyngTTmpTbl" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.111" instance="0" alias="myStateEnd" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.112" instance="0" alias="myStateFreeingItems" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.113" instance="0" alias="myStateInit" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.114" instance="0" alias="myStateLocked" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.115" instance="0" alias="myStateLogin" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.116" instance="0" alias="myStatePreparing" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.117" instance="0" alias="myStateReadingFrmNt" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.118" instance="0" alias="myStateSendingData" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.119" instance="0" alias="myStateSortingReslt" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.120" instance="0" alias="myStateStatistics" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.121" instance="0" alias="myStateUpdating" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.122" instance="0" alias="myStateWritingToNet" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.123" instance="0" alias="myStateNone" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.124" instance="0" alias="myStateOther" type="Gauge32" />
 </group>
 
 <systemDef name="Net-Snmp">
