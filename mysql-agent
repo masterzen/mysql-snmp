@@ -560,6 +560,36 @@ sub fetch_mysql_data {
             
             my $innodb_parser = InnoDBParser->new();
             my $out = $innodb_parser->parse_innodb_status(\@lines);
+
+            # Override values from InnoDB parsing with values from SHOW STATUS,
+            # because InnoDB status might not have everything and the SHOW STATUS is
+            # to be preferred where possible.
+            my %overrides = (
+               'Innodb_buffer_pool_pages_data'  => 'database_pages',
+               'Innodb_buffer_pool_pages_dirty' => 'modified_pages',
+               'Innodb_buffer_pool_pages_free'  => 'free_pages',
+               'Innodb_buffer_pool_pages_total' => 'pool_size',
+               'Innodb_buffer_pool_reads'       => 'pages_read',
+               'Innodb_data_fsyncs'             => 'file_fsyncs',
+               'Innodb_data_pending_reads'      => 'pending_normal_aio_reads',
+               'Innodb_data_pending_writes'     => 'pending_normal_aio_writes',
+               'Innodb_os_log_pending_fsyncs'   => 'pending_log_flushes',
+               'Innodb_pages_created'           => 'pages_created',
+               'Innodb_pages_read'              => 'pages_read',
+               'Innodb_pages_written'           => 'pages_written',
+               'Innodb_rows_deleted'            => 'rows_deleted',
+               'Innodb_rows_inserted'           => 'rows_inserted',
+               'Innodb_rows_read'               => 'rows_read',
+               'Innodb_rows_updated'            => 'rows_updated',
+            );
+
+            # If the SHOW STATUS value exists, override...
+            foreach my $key (keys %overrides) {
+               if ( defined($status{$key}) ) {
+                  $out->{$overrides{$key}} = $status{$overrides{$key}};
+               }
+            }
+
             foreach my $key (keys %$out) {
                 $status{$key} = $out->{$key};
             }
