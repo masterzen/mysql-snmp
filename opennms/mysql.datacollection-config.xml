@@ -129,6 +129,25 @@
   <mibObj oid=".1.3.6.1.4.1.20267.200.1.122" instance="0" alias="myStateWritingToNet" type="Gauge32" />
   <mibObj oid=".1.3.6.1.4.1.20267.200.1.123" instance="0" alias="myStateNone" type="Gauge32" />
   <mibObj oid=".1.3.6.1.4.1.20267.200.1.124" instance="0" alias="myStateOther" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.125" instance="0" alias="myAdditionalPolAllc" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.126" instance="0" alias="myTotalMemAlloc" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.127" instance="0" alias="myHashIndexCellsTtl" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.128" instance="0" alias="myHashIndexCellsUsd" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.129" instance="0" alias="myInnoDBLockStructs" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.130" instance="0" alias="myInnoDBLockWaitScs" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.131" instance="0" alias="myInnoDBTablesInUse" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.132" instance="0" alias="myInnoDBLockedTabls" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.133" instance="0" alias="myUncheckpointdByts" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.134" instance="0" alias="myIBufCellCount" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.135" instance="0" alias="myIBufUsedCells" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.136" instance="0" alias="myIBufFreeCells" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.137" instance="0" alias="myAdaptiveHashMemry" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.138" instance="0" alias="myPageHashMemory" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.139" instance="0" alias="myDictionaryCchMmry" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.140" instance="0" alias="myFileSystemMemory" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.141" instance="0" alias="myLockSystemMemory" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.142" instance="0" alias="myRecoverySystmMmry" type="Gauge32" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.143" instance="0" alias="myThreadHashMemory" type="Gauge32" />
 </group>
 
 <systemDef name="Net-Snmp">

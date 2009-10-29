@@ -1060,3 +1060,156 @@ myStateOther OBJECT-TYPE
     "Number of requests in other state"
     ::= { myStatus 124 }
 
+myAdditionalPoolAlloc OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of bytes allocated in the additional pool"
+    ::= { myStatus 125 }
+
+myTotalMemAlloc OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of bytes allocated by MySQL"
+    ::= { myStatus 126 }
+
+myHashIndexCellsTotal OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "TBD"
+    ::= { myStatus 127 }
+
+myHashIndexCellsUsed OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "TBD"
+    ::= { myStatus 128 }
+
+myInnoDBLockStructs OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "TBD"
+    ::= { myStatus 129 }
+
+myInnoDBLockWaitSecs OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "TBD"
+    ::= { myStatus 130 }
+
+myInnoDBTablesInUse OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of innodb tables in use"
+    ::= { myStatus 131 }
+
+myInnoDBLockedTables OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of locked tables by the innodb subsystem"
+    ::= { myStatus 132 }
+
+myUncheckpointedBytes OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of not yet checkpointed bytes"
+    ::= { myStatus 133 }
+
+myIBufCellCount OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of insert buffer cells"
+    ::= { myStatus 134 }
+
+myIBufUsedCells OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of insert buffer used cells"
+    ::= { myStatus 135 }
+
+myIBufFreeCells OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of insert buffer free cells"
+    ::= { myStatus 136 }
+
+myAdaptiveHashMemory OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB hash memory used"
+    ::= { myStatus 137 }
+
+myPageHashMemory OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB page hash memory used"
+    ::= { myStatus 138 }
+
+myDictionaryCacheMemory OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB dictionary cache memory used"
+    ::= { myStatus 139 }
+
+myFileSystemMemory OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB file system memory used"
+    ::= { myStatus 140 }
+
+myLockSystemMemory OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB lock system memory used"
+    ::= { myStatus 141 }
+
+myRecoverySystemMemory OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB recovery system memory used"
+    ::= { myStatus 142 }
+
+myThreadHashMemory OBJECT-TYPE
+    SYNTAX	Gauge32
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "InnoDB thread hash memory used"
+    ::= { myStatus 143 }
+
+END

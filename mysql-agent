@@ -45,6 +45,13 @@ sub parse_innodb_status {
         'current_transactions' => 0,
         'locked_transactions'  => 0,
         'active_transactions'  => 0,
+        'current_transactions'  => 0,
+        'locked_transactions'   => 0,
+        'active_transactions'   => 0,
+        'innodb_locked_tables'  => 0,
+        'innodb_tables_in_use'  => 0,
+        'innodb_lock_structs'   => 0,
+        'innodb_lock_wait_secs' => 0,
     );
     my $flushed_to;
     my $innodb_lsn;
@@ -93,11 +100,24 @@ sub parse_innodb_status {
                 $status{'active_transactions'} = $status{'active_transactions'} + 1;
             }
         }
+        elsif ($txn_seen && $line =~ m/------- TRX HAS BEEN/) {
+           # ------- TRX HAS BEEN WAITING 32 SEC FOR THIS LOCK TO BE GRANTED:
+           $status{'innodb_lock_wait_secs'} = $self->tonum($row[5]);
+        }
         elsif ($txn_seen && $line =~ m/LOCK WAIT/) {
             $status{'locked_transactions'} = $status{'locked_transactions'} + 1;
         }
         elsif ($line =~ m/read views open inside/) {
             $status{'read_views'} = $self->tonum($row[0]);
+        }
+        elsif ($line =~ m/mysql tables in use/) {
+           # mysql tables in use 2, locked 2
+           $status{'innodb_tables_in_use'} += $self->tonum($row[4]);
+           $status{'innodb_locked_tables'} += $self->tonum($row[6]);
+        }
+        elsif ($line =~ m/lock struct\(s\)/) {
+           # 23 lock struct(s), heap size 3024, undo log entries 27
+           $status{'innodb_lock_structs'} += $self->tonum($row[0]);
         }
         # FILE I/O
         elsif ($line =~ m/OS file reads/) {
@@ -119,33 +139,96 @@ sub parse_innodb_status {
             $status{'pending_buf_pool_flushes'} = $self->tonum($row[7]);
         }
         # INSERT BUFFER AND ADAPTIVE HASH INDEX
-        elsif ($line =~ m/merged recs/) {
-            $status{'ibuf_inserts'} = $self->tonum($row[0]);
-            $status{'ibuf_merged'}  = $self->tonum($row[2]);
-            $status{'ibuf_merges'}  = $self->tonum($row[5]);
+        elsif ($line =~ m/^Ibuf for space 0: size /) {
+           # Older InnoDB code seemed to be ready for an ibuf per tablespace.  It
+           # had two lines in the output.  Newer has just one line, see below.
+           # Ibuf for space 0: size 1, free list len 887, seg size 889, is not empty
+           # Ibuf for space 0: size 1, free list len 887, seg size 889,
+           $status{'ibuf_used_cells'} = $self->tonum($row[5]);
+           $status{'ibuf_free_cells'} = $self->tonum($row[9]);
+           $status{'ibuf_cell_count'} = $self->tonum($row[12]);
+        }
+        elsif ($line =~ m/^Ibuf: size /) {
+           # Ibuf: size 1, free list len 4634, seg size 4636,
+           $status{'ibuf_used_cells'} = $self->tonum($row[2]);
+           $status{'ibuf_free_cells'} = $self->tonum($row[6]);
+           $status{'ibuf_cell_count'} = $self->tonum($row[9]);
+        }
+        elsif ($line =~ m/ merged recs, /) {
+           # 19817685 inserts, 19817684 merged recs, 3552620 merges
+           $status{'ibuf_inserts'} = $self->tonum($row[0]);
+           $status{'ibuf_merged'}  = $self->tonum($row[2]);
+           $status{'ibuf_merges'}  = $self->tonum($row[5]);
+        }
+        elsif ($line =~ m/^Hash table size /) {
+           # In some versions of InnoDB, the used cells is omitted.
+           # Hash table size 4425293, used cells 4229064, ....
+           # Hash table size 57374437, node heap has 72964 buffer(s) <-- no used cells
+           $status{'hash_index_cells_total'} = $self->tonum($row[3]);
+           $status{'hash_index_cells_used'} = $line =~ m/used cells/ ? $self->tonum($row[6]) : '0';
         }
         # LOG
-        elsif ($line =~ m/log i\/o's done/) {    #'
+        elsif ($line =~ m/ log i\/o's done, /) {    #'
             $status{'log_writes'} = $self->tonum($row[0]);
         }
-        elsif ($line =~ m/pending log writes/) {
+        elsif ($line =~ m/ pending log writes, /) {
             $status{'pending_log_writes'}  = $self->tonum($row[0]);
             $status{'pending_chkp_writes'} = $self->tonum($row[4]);
         }
-        elsif ($line =~ m/Log sequence number/) {
+        elsif ($line =~ m/^Log sequence number/) {
             # This number is NOT printed in hex in InnoDB plugin.
             # Log sequence number 13093949495856 //plugin
             # Log sequence number 125 3934414864 //normal
             $innodb_lsn = defined($row[4]) ? $self->make_bigint($row[3], $row[4]) : $self->tonum($row[3]);
         }
-        elsif ($line =~ m/Log flushed up to/) {
+        elsif ($line =~ m/^Log flushed up to/) {
             # This number is NOT printed in hex in InnoDB plugin.
             # Log flushed up to   13093948219327
             # Log flushed up to   125 3934414864
             $flushed_to = defined($row[5]) ? $self->make_bigint($row[4], $row[5]) : $self->tonum($row[4]);
         }
-
+        elsif ($line =~ m/^Last checkpoint at/) {
+           # Last checkpoint at  125 3934293461
+           $status{'last_checkpoint'} = defined($row[4]) ? $self->make_bigint($row[3], $row[4]) : $self->tonum($row[3]);
+        }
         # BUFFER POOL AND MEMORY
+        elsif ($line =~ m/^Total memory allocated/) {
+           # Total memory allocated 29642194944; in additional pool allocated 0
+           $status{'total_mem_alloc'}       = $self->tonum($row[3]);
+           $status{'additional_pool_alloc'} = $self->tonum($row[8]);
+        }
+        elsif($line =~ m/Adaptive hash index /) {
+           #   Adaptive hash index 1538240664 	(186998824 + 1351241840)
+           $status{'adaptive_hash_memory'} = $self->tonum($row[4]);
+        }
+        elsif($line =~ m/Page hash           /) {
+           #   Page hash           11688584
+           $status{'page_hash_memory'} = $self->tonum($row[3]);
+        }
+        elsif($line =~ m/Dictionary cache    /) {
+           #   Dictionary cache    145525560 	(140250984 + 5274576)
+           $status{'dictionary_cache_memory'} = $self->tonum($row[3]);
+        }
+        elsif($line =~ m/File system         /) {
+           #   File system         313848 	(82672 + 231176)
+           $status{'file_system_memory'} = $self->tonum($row[3]);
+        }
+        elsif($line =~ m/Lock system/) {
+           #   Lock system         29232616 	(29219368 + 13248)
+           $status{'lock_system_memory'} = $self->tonum($row[3]);
+        }
+        elsif($line =~ m/Recovery system     /) {
+           #   Recovery system     0 	(0 + 0)
+           $status{'recovery_system_memory'} = $self->tonum($row[3]);
+        }
+        elsif($line =~ m/Threads             /) {
+           #   Threads             409336 	(406936 + 2400)
+           $status{'thread_hash_memory'} = $self->tonum($row[2]);
+        }
+        elsif($line =~ m/innodb_io_pattern   /) {
+           #   innodb_io_pattern   0 	(0 + 0)
+           $status{'innodb_io_pattern_memory'} = $self->tonum($row[2]);
+        }
         elsif ($line =~ m/Buffer pool size /) {
             # The " " after size is necessary to avoid matching the wrong line:
             # Buffer pool size        1769471
@@ -183,16 +266,18 @@ sub parse_innodb_status {
     $status{'unflushed_log'} = $innodb_lsn - $flushed_to;
     $status{'log_bytes_written'} = $innodb_lsn; 
     $status{'log_bytes_flushed'} = $flushed_to;
+    $status{'uncheckpointed_bytes'} = $status{'log_bytes_written'} - $status{'last_checkpoint'};
     
-    foreach my $val (@spin_waits) {
+    my $val;
+    foreach $val (@spin_waits) {
         $status{'spin_waits'} += $val;
     }
 
-    foreach my $val (@spin_rounds) {
+    foreach $val (@spin_rounds) {
         $status{'spin_rounds'} += $val;
     }
 
-    foreach my $val (@os_waits) {
+    foreach $val (@os_waits) {
         $status{'os_waits'} += $val;
     }
     return \%status;
@@ -297,6 +382,11 @@ my @types = (
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Gauge32',   'Gauge32',   'Gauge32'
 );
 
 my @newkeys = (
@@ -361,7 +451,18 @@ my @newkeys = (
     'myStateReadingFromNet',      'myStateSendingData',
     'myStateSortingResult',       'myStateStatistics',
     'myStateUpdating',            'myStateWritingToNet',
-    'myStateNone',                'myStateOther'
+    'myStateNone',                'myStateOther',
+    'myAdditionalPoolAlloc',      'myTotalMemAlloc',
+    'myHashIndexCellsTotal',      'myHashIndexCellsUsed',
+    'myInnoDBLockStructs',        'myInnoDBLockWaitSecs',
+    'myInnoDBTablesInUse',        'myInnoDBLockedTables',
+    'myUncheckpointedBytes',      'myIBufCellCount',
+    'myIBufUsedCells',            'myIBufFreeCells',
+    'myAdaptiveHashMemory',       'myPageHashMemory',
+    'myDictionaryCacheMemory',    'myFileSystemMemory',
+    'myLockSystemMemory',         'myRecoverySystemMemory',
+    'myThreadHashMemory'
+    
 );
 
 my @oldkeys = (
@@ -427,6 +528,16 @@ my @oldkeys = (
     'State_sorting_result',       'State_statistics',
     'State_updating',             'State_writing_to_net',
     'State_none',                 'State_other', 
+    'additional_pool_alloc',      'total_mem_alloc',
+    'hash_index_cells_total',     'hash_index_cells_used',
+    'innodb_lock_structs',        'innodb_lock_wait_secs',
+    'innodb_tables_in_use',       'innodb_locked_tables',
+    'uncheckpointed_bytes',       'ibuf_cell_count',
+    'ibuf_used_cells',            'ibuf_free_cells',
+    'adaptive_hash_memory',       'page_hash_memory',
+    'dictionary_cache_memory',    'file_system_memory',
+    'lock_system_memory',         'recovery_system_memory',
+    'thread_hash_memory'
 );
 
 run() unless caller();
@@ -586,7 +697,7 @@ sub fetch_mysql_data {
             # If the SHOW STATUS value exists, override...
             foreach my $key (keys %overrides) {
                if ( defined($status{$key}) ) {
-                  $out->{$overrides{$key}} = $status{$overrides{$key}};
+                  $out->{$overrides{$key}} = $status{$key};
                }
             }
 
