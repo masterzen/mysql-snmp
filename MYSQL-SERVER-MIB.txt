@@ -845,7 +845,7 @@ myCreatedTmpFiles OBJECT-TYPE
     ::= { myStatus 97 }
 
 myBytesSent OBJECT-TYPE
-    SYNTAX	Counter32
+    SYNTAX	Counter64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -853,7 +853,7 @@ myBytesSent OBJECT-TYPE
     ::= { myStatus 98 }
 
 myBytesReceived OBJECT-TYPE
-    SYNTAX	Counter32
+    SYNTAX	Counter64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION

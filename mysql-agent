@@ -375,7 +375,7 @@ my @types = (
     'Counter32', 'Counter32', 'Counter32', 'Counter32',
     'Counter32', 'Counter32', 'Counter32', 'Counter32',
     'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Gauge32',
+    'Counter32', 'Counter64', 'Counter64', 'Gauge32',
     'Gauge32',   'Counter64', 'Counter64', 'Counter32',
     'Gauge32',   'Counter32', 'Counter32', 'Counter32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
