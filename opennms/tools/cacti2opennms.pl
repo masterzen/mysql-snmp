@@ -60,12 +60,14 @@ sub read_hash {
 my %opt = (
     graph_width => 565,
     graph_height => 200,
+    output => "graph"
 );
 
 GetOptions(
     \%opt,
     "graph_height|h=i",
     "graph_width|w=i",
+    "output|o=s",
     'man',
     'usage',
     "version|V" => sub {VersionMessage(); exit();},
@@ -201,12 +203,6 @@ sub emit_last_gprint {
 END
 }
 
-sub emit_report_list {
-    my $reports = shift;
-
-    print join(', ', map { "mysql.".$_ } @$reports) . " \\\n";
-}
-
 sub emit_datacollection {
     print <<END;
     <!-- MySQL-SERVER MIB -->
@@ -228,68 +224,94 @@ END
 END
 }
 
+sub emit_report_list {
+    my %reports = ();
+LOOP:
+    foreach my $g ( @{ $t->{graphs} } ) {
+        # skip graphs we don't (yet) support
+        my $it;
+        foreach $it ( @{ $g->{items} } ) {
+            unless(defined($cacti2MIB->{short_names}->{$it->{item}})) {
+                next LOOP;
+            }
+            my $rname = condense($g->{name});
+            $reports{$rname} = '';
+        }
+    }
+    print join(', ', map { "mysql.".$_ } keys %reports) . " \\\n";
+    print "\n\n";
+}
+
+sub emit_graphs {
+LOOP:
+    foreach my $g ( @{ $t->{graphs} } ) {
+        # skip graphs we don't (yet) support
+        my $it;
+        foreach $it ( @{ $g->{items} } ) {
+            unless(defined($cacti2MIB->{short_names}->{$it->{item}})) {
+                next LOOP;
+            }
+        }
+
+        # Set the graph's title
+        my $name = $g->{name};
+        my $rname = condense($g->{name});
+        my @res = ();
+        $g->{title} = "$g->{name}";
+
+        foreach $it ( @{ $g->{items} } ) {
+            push(@res, crunch($cacti2MIB->{short_names}->{$it->{item}}->{mib}));
+        }
+
+        emit_report($g, $rname, join(',', @res));
+        emit_defs($g);
+
+        my $max = 0;
+        foreach $it ( @{ $g->{items} } ) {
+            my $text = to_words($it->{item});
+            $max = length($text) if (length($text) > $max);
+        }
+
+        my $index = 0;
+        foreach $it ( @{ $g->{items} } ) {
+            unless(defined($cacti2MIB->{short_names}->{$it->{item}})) {
+                next;
+            }
+            my $rrName = crunch($cacti2MIB->{short_names}->{$it->{item}}->{mib}, defined($it->{cdef}));
+            my $type = $it->{type} || 'LINE1';
+            my $t = to_words($it->{item});
+            my $text = $t . (' ' x ($max - length($t)));
+
+            emit_rrd($rrName, $type, $it->{color}, $text);
+            $rrName = emit_cdef($rrName) if defined($it->{cdef});
+            if ($index++ < scalar @{ $g->{items}} -1) {
+                emit_gprint($rrName); 
+            } else {
+                emit_last_gprint($rrName); 
+            }
+        }
+        print "\n\n";
+    }
+}
+
 # Do the work.
 # #############################################################################
 
-my @reports;
-
 # Graph templates
-LOOP:
-foreach my $g ( @{ $t->{graphs} } ) {
-    # skip graphs we don't (yet) support
-    my $it;
-    foreach $it ( @{ $g->{items} } ) {
-        unless(defined($cacti2MIB->{short_names}->{$it->{item}})) {
-            next LOOP;
-        }
-    }
-
-    # Set the graph's title
-    my $name = $g->{name};
-    my $rname = condense($g->{name});
-    push(@reports, $rname);
-    my @res = ();
-    $g->{title} = "$g->{name}";
-
-    foreach $it ( @{ $g->{items} } ) {
-        push(@res, crunch($cacti2MIB->{short_names}->{$it->{item}}->{mib}));
-    }
-
-    emit_report($g, $rname, join(',', @res));
-    emit_defs($g);
-
-    my $max = 0;
-    foreach $it ( @{ $g->{items} } ) {
-        my $text = to_words($it->{item});
-        $max = length($text) if (length($text) > $max);
-    }
-    
-    my $index = 0;
-    foreach $it ( @{ $g->{items} } ) {
-        unless(defined($cacti2MIB->{short_names}->{$it->{item}})) {
-            next;
-        }
-        my $rrName = crunch($cacti2MIB->{short_names}->{$it->{item}}->{mib}, defined($it->{cdef}));
-        my $type = $it->{type} || 'LINE1';
-        my $t = to_words($it->{item});
-        my $text = $t . (' ' x ($max - length($t)));
-        
-        emit_rrd($rrName, $type, $it->{color}, $text);
-        $rrName = emit_cdef($rrName) if defined($it->{cdef});
-        if ($index++ < scalar @{ $g->{items}} -1) {
-            emit_gprint($rrName); 
-        } else {
-            emit_last_gprint($rrName); 
-        }
-    }
-    print "\n\n";
+if ($opt{output} eq "graph") {
+    emit_graphs();
+} 
+elsif ($opt{output} eq "graphlist") {
+    emit_report_list();
 }
-print "-" x 80 . "\n";
-emit_report_list(\@reports);
-print "\n\n";
+elsif ($opt{output} eq "datacollection") {
+    emit_datacollection();
+}
+else {
+    print "Unknown output format\n";
+    pod2usage(-verbose => 0);
+}
 
-print "-" x 80 . "\n";
-emit_datacollection();
 
 __END__
 
@@ -303,6 +325,7 @@ __END__
 
     -w, --graph_width WIDTH          width of graph in pixel
     -h, --graph_height HEIGHT        height of graph in pixel
+    -o format                        which configuration to output
     -?, --help                       display this help and exit
     --usage                          display detailed usage information
     --man                            display program man page
@@ -319,6 +342,14 @@ Graphs will be output with WIDTH pixels. Default value 565 pixels.
 =item B<-h HEIGHT,--graph_height HEIGHT>
 
 Graphs will be output with HEIGHT pixels. Default value 200 pixels.
+
+=item B<-o format,--output format>
+
+What kind of opennms configuration file to output.
+Possible choices are:
+  * graph: outputs the content of the snmp-graph.properties
+  * graphlist: outputs the content of the snmp-graph.properties reports key
+  * datacollection: outputs the content of the datacollections-config.xml file
 
 =item B<--man>
 
