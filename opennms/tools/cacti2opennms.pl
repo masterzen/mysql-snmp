@@ -282,8 +282,8 @@ LOOP:
             my $t = to_words($it->{item});
             my $text = $t . (' ' x ($max - length($t)));
 
-            emit_rrd($rrName, $type, $it->{color}, $text);
-            $rrName = emit_cdef($rrName) if defined($it->{cdef});
+            my $rrNamec = defined($it->{cdef}) ? emit_cdef($rrName) : $rrName;
+            emit_rrd($rrNamec, $type, $it->{color}, $text);
             if ($index++ < scalar @{ $g->{items}} -1) {
                 emit_gprint($rrName); 
             } else {
