@@ -48,7 +48,7 @@ STOP="--stop --quiet --pidfile ${PID_FILE} --name ${NAME}"
 case "$1" in
   start)
 		echo -n "Starting $DESC: "
-    if start-stop-daemon ${START} -- -d --daemon-pid ${PID_FILE} ${DAEMON_OPTS} >/dev/null ; then
+    if start-stop-daemon ${START} -- --daemon-pid ${PID_FILE} ${DAEMON_OPTS} >/dev/null ; then
             echo "${NAME}."
     else
             if start-stop-daemon --test ${DAEMON_OPTS} >/dev/null 2>&1; then
