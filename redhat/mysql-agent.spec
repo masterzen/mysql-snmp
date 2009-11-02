@@ -52,9 +52,9 @@ install -m 644 MYSQL-SERVER-MIB.txt ${RPM_BUILD_ROOT}%{_datadir}/snmp/mibs
 %{_datadir}/snmp/mibs/*
 
 %changelog
-* Sat 31 2009 Brice Figureau <brice@daysofwonder.com> - 1.0rc1-1
+* Sat Oct 31 2009 Brice Figureau <brice@daysofwonder.com> - 1.0rc1-1
 New version
-* Sat 24 2009 Brice Figureau <brice@daysofwonder.com> - 0.8-1
+* Sat Oct 24 2009 Brice Figureau <brice@daysofwonder.com> - 0.8-1
 New version
 Manpage compression in the spec
 * Mon Sep 28 2009 Robin Bowes <rpmbuild@yo61.net> - 0.7-2
