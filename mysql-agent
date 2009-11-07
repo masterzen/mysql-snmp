@@ -31,8 +31,11 @@ package InnoDBParser;
 
 use strict;
 use warnings;
-use bigint;
 use Data::Dumper;
+
+# Math::BigInt reverts to perl only
+# automatically if GMP is not installed
+use Math::BigInt lib => 'GMP';
 
 sub new {
    bless {}, shift;
@@ -288,7 +291,7 @@ sub tonum {
     my $self = shift;
     my $str = shift;
     return 0 if !$str;
-    return $1 if $str =~ m/(\d+)/;
+    return new Math::BigInt $1 if $str =~ m/(\d+)/;
     return 0;
 }
 
@@ -296,18 +299,21 @@ sub tonum {
 # a hi lo representation
 sub make_bigint {
     my ($self, $hi, $lo) = @_;
-	unless ($lo) {
-	    return hex($hi);
+
+    unless ($lo) {
+        $hi = new Math::BigInt '0x' . $hi;
+        return $hi;
     }
-    return $hi * 4294967296 + $lo;
+
+    $hi = new Math::BigInt $hi;
+    $lo = new Math::BigInt $lo;
+    return $lo->badd($hi->blsft(32));
 }
-no bigint;
+
 # end of package InnoDBParser
 
 package main;
 
-# Unfortunately Getopt::Long is not compatible with bigint
-no bigint;
 use strict;
 use warnings;
 use Carp;

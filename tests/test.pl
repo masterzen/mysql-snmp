@@ -4,7 +4,7 @@ BEGIN {
     require 'mysql-agent';
 }
 
-use Test::More tests => 3;
+use Test::More tests => 9;
 use Data::Dumper;
 
 sub readfile
@@ -21,6 +21,42 @@ sub readfile
 }
 
 $innodb_parser = InnoDBParser->new;
+
+is(
+   $innodb_parser->make_bigint('0', '1170663853'),
+   '1170663853',
+   'make_bigint 0 1170663853'
+);
+
+is(
+   $innodb_parser->make_bigint('1', '504617703'),
+   '4799584999',
+   'make_bigint 1 504617703'
+);
+
+is(
+   $innodb_parser->make_bigint('EF861B144C'),
+   '1028747105356',
+   'make_bigint EF861B144C'
+);
+
+is(
+   $innodb_parser->tonum('0'),
+   '0',
+   'tonum 0'
+);
+
+is(
+   $innodb_parser->tonum(),
+   '0',
+   'tonum undef'
+);
+
+is(
+   $innodb_parser->tonum('74900191315') - $innodb_parser->tonum('1170664159'),
+   '73729527156',
+   'substraction 1170664159 74900191315'
+);
 
 is_deeply(
    $innodb_parser->parse_innodb_status(readfile('tests/data/innodb_out_001.txt')),
