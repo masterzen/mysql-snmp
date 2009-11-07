@@ -63,7 +63,7 @@ sub parse_innodb_status {
     my @spin_rounds;
     my @os_waits;
     my $txn_seen = 0;
-    
+
     foreach my $line (@$lines) {
         my @row = split(/ +/, $line);
 
@@ -201,7 +201,7 @@ sub parse_innodb_status {
            $status{'additional_pool_alloc'} = $self->tonum($row[8]);
         }
         elsif($line =~ m/Adaptive hash index /) {
-           #   Adaptive hash index 1538240664 	(186998824 + 1351241840)
+           #   Adaptive hash index 1538240664   (186998824 + 1351241840)
            $status{'adaptive_hash_memory'} = $self->tonum($row[4]);
         }
         elsif($line =~ m/Page hash           /) {
@@ -209,27 +209,27 @@ sub parse_innodb_status {
            $status{'page_hash_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/Dictionary cache    /) {
-           #   Dictionary cache    145525560 	(140250984 + 5274576)
+           #   Dictionary cache    145525560    (140250984 + 5274576)
            $status{'dictionary_cache_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/File system         /) {
-           #   File system         313848 	(82672 + 231176)
+           #   File system         313848   (82672 + 231176)
            $status{'file_system_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/Lock system/) {
-           #   Lock system         29232616 	(29219368 + 13248)
+           #   Lock system         29232616     (29219368 + 13248)
            $status{'lock_system_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/Recovery system     /) {
-           #   Recovery system     0 	(0 + 0)
+           #   Recovery system     0    (0 + 0)
            $status{'recovery_system_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/Threads             /) {
-           #   Threads             409336 	(406936 + 2400)
+           #   Threads             409336   (406936 + 2400)
            $status{'thread_hash_memory'} = $self->tonum($row[2]);
         }
         elsif($line =~ m/innodb_io_pattern   /) {
-           #   innodb_io_pattern   0 	(0 + 0)
+           #   innodb_io_pattern   0    (0 + 0)
            $status{'innodb_io_pattern_memory'} = $self->tonum($row[2]);
         }
         elsif ($line =~ m/Buffer pool size /) {
@@ -267,10 +267,10 @@ sub parse_innodb_status {
 
     # Derive some values from other values.
     $status{'unflushed_log'} = $innodb_lsn - $flushed_to;
-    $status{'log_bytes_written'} = $innodb_lsn; 
+    $status{'log_bytes_written'} = $innodb_lsn;
     $status{'log_bytes_flushed'} = $flushed_to;
     $status{'uncheckpointed_bytes'} = $status{'log_bytes_written'} - $status{'last_checkpoint'};
-    
+
     my $val;
     foreach $val (@spin_waits) {
         $status{'spin_waits'} += $val;
@@ -340,8 +340,8 @@ my %opt = (
     slave      => 0,
     innodb     => 1,
     procs      => 0,
-	host       => 'localhost',
-	heartbeat  => ''
+    host       => 'localhost',
+    heartbeat  => ''
 );
 
 my %global_status       = ();
@@ -353,7 +353,7 @@ my %oids    = ();
 my $lowestOid;
 my $highestOid;
 my @ks;
-my $regOID; 
+my $regOID;
 
 # various types & definitions
 my @types = (
@@ -388,12 +388,11 @@ my @types = (
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Counter64', 'Counter64', 'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Counter64', 'Counter64', 'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Counter64', 'Counter64', 'Counter64', 'Counter64',
-    'Counter64', 'Counter64', 'Counter64'
+    'Counter64', 'Counter64', 'Counter64',
 );
 
 my @newkeys = (
@@ -451,7 +450,7 @@ my @newkeys = (
     'myLogBytesWritten',          'myRelayLogSpace',
     'myBinlogCacheSize',          'myBinlogCacheDiskUse',
     'myBinlogCacheUse',           'myBinaryLogSpace',
-    'myStateClosingTables',       'myStateCopyingToTmpTable' ,
+    'myStateClosingTables',       'myStateCopyingToTmpTable',
     'myStateEnd',                 'myStateFreeingItems',
     'myStateInit',                'myStateLocked',
     'myStateLogin',               'myStatePreparing',
@@ -468,8 +467,7 @@ my @newkeys = (
     'myAdaptiveHashMemory',       'myPageHashMemory',
     'myDictionaryCacheMemory',    'myFileSystemMemory',
     'myLockSystemMemory',         'myRecoverySystemMemory',
-    'myThreadHashMemory'
-    
+    'myThreadHashMemory',
 );
 
 my @oldkeys = (
@@ -527,14 +525,14 @@ my @oldkeys = (
     'log_bytes_written',          'relay_log_space',
     'binlog_cache_size',          'Binlog_cache_disk_use',
     'Binlog_cache_use',           'binary_log_space',
-    'State_closing_tables',       'State_copying_to_tmp_table' ,
+    'State_closing_tables',       'State_copying_to_tmp_table',
     'State_end',                  'State_freeing_items',
     'State_init',                 'State_locked',
     'State_login',                'State_preparing',
     'State_reading_from_net',     'State_sending_data',
     'State_sorting_result',       'State_statistics',
     'State_updating',             'State_writing_to_net',
-    'State_none',                 'State_other', 
+    'State_none',                 'State_other',
     'additional_pool_alloc',      'total_mem_alloc',
     'hash_index_cells_total',     'hash_index_cells_used',
     'innodb_lock_structs',        'innodb_lock_wait_secs',
@@ -544,7 +542,7 @@ my @oldkeys = (
     'adaptive_hash_memory',       'page_hash_memory',
     'dictionary_cache_memory',    'file_system_memory',
     'lock_system_memory',         'recovery_system_memory',
-    'thread_hash_memory'
+    'thread_hash_memory',
 );
 
 run() unless caller();
@@ -552,7 +550,7 @@ run() unless caller();
 # daemonize the program
 sub daemonize {
     open STDIN, '/dev/null' or die "mysql-agent: can't read /dev/null: $!";
-    open STDOUT, '>/dev/null' or die "mysql-agent: can't write to /dev/null: $!";    
+    open STDOUT, '>/dev/null' or die "mysql-agent: can't write to /dev/null: $!";
     defined(my $pid = fork) or die "mysql-agent: can't fork: $!";
     if ($pid) {
         # parent
@@ -608,7 +606,7 @@ sub fetch_mysql_data {
             'State_updating'             => 0,
             'State_writing_to_net'       => 0,
             'State_none'                 => 0,
-            'State_other'                => 0, 
+            'State_other'                => 0,
         );
 
         my $result = $dbh->selectall_arrayref("SHOW /*!50002 GLOBAL */ STATUS");
@@ -629,25 +627,25 @@ sub fetch_mysql_data {
         }
 
         if ($opt{slave}) {
-			$result = $dbh->selectall_arrayref("SHOW SLAVE STATUS", { Slice => {} });
+            $result = $dbh->selectall_arrayref("SHOW SLAVE STATUS", { Slice => {} });
 
-			foreach my $row (@$result)
-			{
-				# Must lowercase keys because different versions have different
-				# lettercase.
-				my %newrow = map { lc($_) => $row->{$_} } keys %$row;
-				$status{'relay_log_space'}	= $newrow{'relay_log_space'};
-				$status{'slave_lag'}		= $newrow{'seconds_behind_master'};
+            foreach my $row (@$result)
+            {
+                # Must lowercase keys because different versions have different
+                # lettercase.
+                my %newrow = map { lc($_) => $row->{$_} } keys %$row;
+                $status{'relay_log_space'}  = $newrow{'relay_log_space'};
+                $status{'slave_lag'}        = $newrow{'seconds_behind_master'};
 
-				# Check replication heartbeat, if present.
-				if ( $opt{heartbeat} ne '' ) {
-					my $row2 = $dbh->selectrow_arrayref("SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1) FROM $opt{heartbeat} WHERE id = 1");
-					$status{'slave_lag'} = $row2->[0];
-				}
+                # Check replication heartbeat, if present.
+                if ( $opt{heartbeat} ne '' ) {
+                    my $row2 = $dbh->selectrow_arrayref("SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1) FROM $opt{heartbeat} WHERE id = 1");
+                    $status{'slave_lag'} = $row2->[0];
+                }
 
-				$status{'slave_running'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 1 : 0;
-				$status{'slave_stopped'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 0 : 1;
-			}
+                $status{'slave_running'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 1 : 0;
+                $status{'slave_stopped'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 0 : 1;
+            }
         }
 
         # Get info on master logs.
@@ -675,7 +673,7 @@ sub fetch_mysql_data {
         if ($opt{innodb} && $status{'have_innodb'} eq 'YES') {
             my $innodb_array = $dbh->selectall_arrayref("SHOW /*!50000 ENGINE*/ INNODB STATUS",{Slice => {}});
             my @lines = split("\n", $innodb_array->[0]{'Status'});
-            
+
             my $innodb_parser = InnoDBParser->new();
             my $out = $innodb_parser->parse_innodb_status(\@lines);
 
