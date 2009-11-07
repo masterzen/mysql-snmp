@@ -382,11 +382,12 @@ my @types = (
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
+    'Gauge32',   'Counter64', 'Counter64', 'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32'
+    'Counter64', 'Counter64', 'Counter64', 'Counter64',
+    'Counter64', 'Counter64', 'Counter64'
 );
 
 my @newkeys = (
