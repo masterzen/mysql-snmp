@@ -136,7 +136,7 @@ sub emit_report {
     my $g = shift;
     my $rname = shift;
     my $list = shift;
-    
+
    print <<END;
 report.mysql.${rname}.name=$g->{name}
 report.mysql.${rname}.columns=$list
@@ -176,7 +176,7 @@ END
 
 sub emit_cdef {
     my $name = shift;
-    
+
     print <<END;
  CDEF:${name}c=${name},-1,* \\
 END
@@ -209,13 +209,13 @@ sub emit_datacollection {
         <group name="mysql" ifType="ignore">
 END
     my $i = 0;
-    foreach my $mib ( @mibKeysInOrder ) 
+    foreach my $mib ( @mibKeysInOrder )
     {
-    	$i++;
-    	my $name = crunch($mib);
-    	my $oid = $cacti2MIB->{startoid}.".$i";
-    	my $type = $mibTypes{$mib};
-    	print <<END;
+        $i++;
+        my $name = crunch($mib);
+        my $oid = $cacti2MIB->{startoid}.".$i";
+        my $type = $mibTypes{$mib};
+        print <<END;
             <mibObj oid="$oid" instance="0" alias="$name" type="$type" />
 END
     }
@@ -285,13 +285,53 @@ LOOP:
             my $rrNamec = defined($it->{cdef}) ? emit_cdef($rrName) : $rrName;
             emit_rrd($rrNamec, $type, $it->{color}, $text);
             if ($index++ < scalar @{ $g->{items}} -1) {
-                emit_gprint($rrName); 
+                emit_gprint($rrName);
             } else {
-                emit_last_gprint($rrName); 
+                emit_last_gprint($rrName);
             }
         }
         print "\n\n";
     }
+}
+
+sub array_print {
+    my $columns = shift;
+    my @array = @_;
+    my $length = scalar @array;
+
+    my $k = 0;
+    while($length > 0) {
+        my $str = '';
+        my $rest = ($length <= $columns ? $length : $columns);
+        for(my $i = 0; $i < $rest; $i++) {
+            $str .= "'$array[$k + $i]', ";
+        }
+        $str .= " # ". ($k+1)." - ". ($k+$rest) ."\n";
+        print ' ' x 4 . $str;
+        $k += $rest;
+        $length -= $rest;
+    }
+}
+
+my %snmpTypes = (
+    'Gauge32' => 'Gauge32',
+    'Counter32' => 'Counter32',
+    'Counter64' => 'Counter64',
+    'Gauge64' => 'Counter64', # there is no gauge64 in SNMP
+);
+
+sub emit_agent {
+    print "my \@types = (\n";
+    array_print(4, map { $snmpTypes{$mibTypes{$_}} } @mibKeysInOrder);
+    print ");\n\n";
+
+    print "my \@newkeys = (\n";
+    array_print(2, @mibKeysInOrder);
+    print ");\n\n";
+
+    print "my \@oldkeys = (\n";
+    array_print(2, map { $mib2Cacti{$_} } @mibKeysInOrder);
+    print ");\n\n";
 }
 
 # Do the work.
@@ -300,12 +340,15 @@ LOOP:
 # Graph templates
 if ($opt{output} eq "graph") {
     emit_graphs();
-} 
+}
 elsif ($opt{output} eq "graphlist") {
     emit_report_list();
 }
 elsif ($opt{output} eq "datacollection") {
     emit_datacollection();
+}
+elsif ($opt{output} eq "agent") {
+    emit_agent();
 }
 else {
     print "Unknown output format\n";
@@ -318,9 +361,9 @@ __END__
 =head1 NAME
 
     cacti2opennsm - create opennms configuration from MySQL Cacti Templates 
- 
+
 =head1 SYNOPSIS
- 
+
     cacti2opennms [options] mysql_definitions.pl cacti2mib.pl
 
     -w, --graph_width WIDTH          width of graph in pixel
@@ -350,6 +393,7 @@ Possible choices are:
   * graph: outputs the content of the snmp-graph.properties
   * graphlist: outputs the content of the snmp-graph.properties reports key
   * datacollection: outputs the content of the datacollections-config.xml file
+  * agent: outputs the needed array for mysql-agent
 
 =item B<--man>
 

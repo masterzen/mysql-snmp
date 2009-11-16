@@ -23,7 +23,7 @@
 
 use strict;
 
-my $VERSION = "1.0rc1";
+my $VERSION = "v1.0_02";
 $VERSION = eval $VERSION;
 
 ## Packages ##
@@ -31,8 +31,11 @@ package InnoDBParser;
 
 use strict;
 use warnings;
-use bigint;
 use Data::Dumper;
+
+# Math::BigInt reverts to perl only
+# automatically if GMP is not installed
+use Math::BigInt lib => 'GMP';
 
 sub new {
    bless {}, shift;
@@ -60,7 +63,7 @@ sub parse_innodb_status {
     my @spin_rounds;
     my @os_waits;
     my $txn_seen = 0;
-    
+
     foreach my $line (@$lines) {
         my @row = split(/ +/, $line);
 
@@ -198,7 +201,7 @@ sub parse_innodb_status {
            $status{'additional_pool_alloc'} = $self->tonum($row[8]);
         }
         elsif($line =~ m/Adaptive hash index /) {
-           #   Adaptive hash index 1538240664 	(186998824 + 1351241840)
+           #   Adaptive hash index 1538240664   (186998824 + 1351241840)
            $status{'adaptive_hash_memory'} = $self->tonum($row[4]);
         }
         elsif($line =~ m/Page hash           /) {
@@ -206,27 +209,27 @@ sub parse_innodb_status {
            $status{'page_hash_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/Dictionary cache    /) {
-           #   Dictionary cache    145525560 	(140250984 + 5274576)
+           #   Dictionary cache    145525560    (140250984 + 5274576)
            $status{'dictionary_cache_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/File system         /) {
-           #   File system         313848 	(82672 + 231176)
+           #   File system         313848   (82672 + 231176)
            $status{'file_system_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/Lock system/) {
-           #   Lock system         29232616 	(29219368 + 13248)
+           #   Lock system         29232616     (29219368 + 13248)
            $status{'lock_system_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/Recovery system     /) {
-           #   Recovery system     0 	(0 + 0)
+           #   Recovery system     0    (0 + 0)
            $status{'recovery_system_memory'} = $self->tonum($row[3]);
         }
         elsif($line =~ m/Threads             /) {
-           #   Threads             409336 	(406936 + 2400)
+           #   Threads             409336   (406936 + 2400)
            $status{'thread_hash_memory'} = $self->tonum($row[2]);
         }
         elsif($line =~ m/innodb_io_pattern   /) {
-           #   innodb_io_pattern   0 	(0 + 0)
+           #   innodb_io_pattern   0    (0 + 0)
            $status{'innodb_io_pattern_memory'} = $self->tonum($row[2]);
         }
         elsif ($line =~ m/Buffer pool size /) {
@@ -264,10 +267,10 @@ sub parse_innodb_status {
 
     # Derive some values from other values.
     $status{'unflushed_log'} = $innodb_lsn - $flushed_to;
-    $status{'log_bytes_written'} = $innodb_lsn; 
+    $status{'log_bytes_written'} = $innodb_lsn;
     $status{'log_bytes_flushed'} = $flushed_to;
     $status{'uncheckpointed_bytes'} = $status{'log_bytes_written'} - $status{'last_checkpoint'};
-    
+
     my $val;
     foreach $val (@spin_waits) {
         $status{'spin_waits'} += $val;
@@ -288,7 +291,7 @@ sub tonum {
     my $self = shift;
     my $str = shift;
     return 0 if !$str;
-    return $1 if $str =~ m/(\d+)/;
+    return new Math::BigInt $1 if $str =~ m/(\d+)/;
     return 0;
 }
 
@@ -296,18 +299,21 @@ sub tonum {
 # a hi lo representation
 sub make_bigint {
     my ($self, $hi, $lo) = @_;
-	unless ($lo) {
-	    return hex($hi);
+
+    unless ($lo) {
+        $hi = new Math::BigInt '0x' . $hi;
+        return $hi;
     }
-    return $hi * 4294967296 + $lo;
+
+    $hi = new Math::BigInt $hi;
+    $lo = new Math::BigInt $lo;
+    return $lo->badd($hi->blsft(32));
 }
-no bigint;
+
 # end of package InnoDBParser
 
 package main;
 
-# Unfortunately Getopt::Long is not compatible with bigint
-no bigint;
 use strict;
 use warnings;
 use Carp;
@@ -334,8 +340,8 @@ my %opt = (
     slave      => 0,
     innodb     => 1,
     procs      => 0,
-	host       => 'localhost',
-	heartbeat  => ''
+    host       => 'localhost',
+    heartbeat  => ''
 );
 
 my %global_status       = ();
@@ -347,197 +353,196 @@ my %oids    = ();
 my $lowestOid;
 my $highestOid;
 my @ks;
-my $regOID; 
+my $regOID;
 
 # various types & definitions
 my @types = (
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Gauge32',   'Counter64', 'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Gauge32',
-    'Gauge32',   'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Gauge32',   'Gauge32',   'Counter32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Counter32',
-    'Gauge32',   'Gauge32',   'Counter32', 'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Gauge32',
-    'Gauge32',   'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter32', 'Counter32', 'Counter32',
-    'Counter32', 'Counter64', 'Counter64', 'Gauge32',
-    'Gauge32',   'Counter64', 'Counter64', 'Counter32',
-    'Gauge32',   'Counter32', 'Counter32', 'Counter32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',
-    'Gauge32',   'Gauge32',   'Gauge32'
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 1 - 4
+    'Gauge32',   'Counter64', 'Gauge32',   'Gauge32',      # 5 - 8
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 9 - 12
+    'Gauge32',   'Gauge32',   'Counter32', 'Counter32',    # 13 - 16
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 17 - 20
+    'Counter32', 'Gauge32',   'Gauge32',   'Gauge32',      # 21 - 24
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 25 - 28
+    'Gauge32',   'Gauge32',   'Counter32', 'Counter32',    # 29 - 32
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 33 - 36
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 37 - 40
+    'Counter32', 'Counter32', 'Counter32', 'Gauge32',      # 41 - 44
+    'Gauge32',   'Counter32', 'Counter32', 'Counter32',    # 45 - 48
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 49 - 52
+    'Counter32', 'Gauge32',   'Gauge32',   'Counter32',    # 53 - 56
+    'Gauge32',   'Gauge32',   'Gauge32',   'Counter32',    # 57 - 60
+    'Gauge32',   'Gauge32',   'Counter32', 'Gauge32',      # 61 - 64
+    'Gauge32',   'Gauge32',   'Gauge32',   'Counter32',    # 65 - 68
+    'Counter32', 'Counter32', 'Counter32', 'Gauge32',      # 69 - 72
+    'Gauge32',   'Counter32', 'Counter32', 'Counter32',    # 73 - 76
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 77 - 80
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 81 - 84
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 85 - 88
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 89 - 92
+    'Counter32', 'Counter32', 'Counter32', 'Counter32',    # 93 - 96
+    'Counter32', 'Counter64', 'Counter64', 'Gauge32',      # 97 - 100
+    'Gauge32',   'Counter64', 'Counter64', 'Counter32',    # 101 - 104
+    'Gauge32',   'Counter32', 'Counter32', 'Counter32',    # 105 - 108
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 109 - 112
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 113 - 116
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 117 - 120
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 121 - 124
+    'Counter64', 'Counter64', 'Gauge32',   'Gauge32',      # 125 - 128
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 129 - 132
+    'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 133 - 136
+    'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 137 - 140
+    'Counter64', 'Counter64', 'Counter64',                 # 141 - 143
 );
 
 my @newkeys = (
-    'myKeyReadRequests',          'myKeyReads',
-    'myKeyWriteRequests',         'myKeyWrites',
-    'myHistoryList',              'myInnodbTransactions',
-    'myReadViews',                'myCurrentTransactions',
-    'myLockedTransactions',       'myActiveTransactions',
-    'myPoolSize',                 'myFreePages',
-    'myDatabasePages',            'myModifiedPages',
-    'myPagesRead',                'myPagesCreated',
-    'myPagesWritten',             'myFileFsyncs',
-    'myFileReads',                'myFileWrites',
-    'myLogWrites',                'myPendingAIOLogIOs',
-    'myPendingAIOSyncIOs',        'myPendingBufPoolFlushes',
-    'myPendingChkpWrites',        'myPendingIbufAIOReads',
-    'myPendingLogFlushes',        'myPendingLogWrites',
-    'myPendingNormalAIOReads',    'myPendingNormalAIOWrites',
-    'myIbufInserts',              'myIbufMerged',
-    'myIbufMerges',               'mySpinWaits',
-    'mySpinRounds',               'myOsWaits',
-    'myRowsInserted',             'myRowsUpdated',
-    'myRowsDeleted',              'myRowsRead',
-    'myTableLocksWaited',         'myTableLocksImmediate',
-    'mySlowQueries',              'myOpenFiles',
-    'myOpenTables',               'myOpenedTables',
-    'myInnodbOpenFiles',          'myOpenFilesLimit',
-    'myTableCache',               'myAbortedClients',
-    'myAbortedConnects',          'myMaxUsedConnections',
-    'mySlowLaunchThreads',        'myThreadsCached',
-    'myThreadsConnected',         'myThreadsCreated',
-    'myThreadsRunning',           'myMaxConnections',
-    'myThreadCacheSize',          'myConnections',
-    'mySlaveRunning',             'mySlaveStopped',
-    'mySlaveRetriedTransactions', 'mySlaveLag',
-    'mySlaveOpenTempTables',      'myQcacheFreeBlocks',
-    'myQcacheFreeMemory',         'myQcacheHits',
-    'myQcacheInserts',            'myQcacheLowmemPrunes',
-    'myQcacheNotCached',          'myQcacheQueriesInCache',
-    'myQcacheTotalBlocks',        'myQueryCacheSize',
-    'myQuestions',                'myComUpdate',
-    'myComInsert',                'myComSelect',
-    'myComDelete',                'myComReplace',
-    'myComLoad',                  'myComUpdateMulti',
-    'myComInsertSelect',          'myComDeleteMulti',
-    'myComReplaceSelect',         'mySelectFullJoin',
-    'mySelectFullRangeJoin',      'mySelectRange',
-    'mySelectRangeCheck',         'mySelectScan',
-    'mySortMergePasses',          'mySortRange',
-    'mySortRows',                 'mySortScan',
-    'myCreatedTmpTables',         'myCreatedTmpDiskTables',
-    'myCreatedTmpFiles',          'myBytesSent',
-    'myBytesReceived',            'myInnodbLogBufferSize',
-    'myUnflushedLog',             'myLogBytesFlushed',
-    'myLogBytesWritten',          'myRelayLogSpace',
-    'myBinlogCacheSize',          'myBinlogCacheDiskUse',
-    'myBinlogCacheUse',           'myBinaryLogSpace',
-    'myStateClosingTables',       'myStateCopyingToTmpTable' ,
-    'myStateEnd',                 'myStateFreeingItems',
-    'myStateInit',                'myStateLocked',
-    'myStateLogin',               'myStatePreparing',
-    'myStateReadingFromNet',      'myStateSendingData',
-    'myStateSortingResult',       'myStateStatistics',
-    'myStateUpdating',            'myStateWritingToNet',
-    'myStateNone',                'myStateOther',
-    'myAdditionalPoolAlloc',      'myTotalMemAlloc',
-    'myHashIndexCellsTotal',      'myHashIndexCellsUsed',
-    'myInnoDBLockStructs',        'myInnoDBLockWaitSecs',
-    'myInnoDBTablesInUse',        'myInnoDBLockedTables',
-    'myUncheckpointedBytes',      'myIBufCellCount',
-    'myIBufUsedCells',            'myIBufFreeCells',
-    'myAdaptiveHashMemory',       'myPageHashMemory',
-    'myDictionaryCacheMemory',    'myFileSystemMemory',
-    'myLockSystemMemory',         'myRecoverySystemMemory',
-    'myThreadHashMemory'
-    
+    'myKeyReadRequests',          'myKeyReads',                  # 1 - 2
+    'myKeyWriteRequests',         'myKeyWrites',                 # 3 - 4
+    'myHistoryList',              'myInnodbTransactions',        # 5 - 6
+    'myReadViews',                'myCurrentTransactions',       # 7 - 8
+    'myLockedTransactions',       'myActiveTransactions',        # 9 - 10
+    'myPoolSize',                 'myFreePages',                 # 11 - 12
+    'myDatabasePages',            'myModifiedPages',             # 13 - 14
+    'myPagesRead',                'myPagesCreated',              # 15 - 16
+    'myPagesWritten',             'myFileFsyncs',                # 17 - 18
+    'myFileReads',                'myFileWrites',                # 19 - 20
+    'myLogWrites',                'myPendingAIOLogIOs',          # 21 - 22
+    'myPendingAIOSyncIOs',        'myPendingBufPoolFlushes',     # 23 - 24
+    'myPendingChkpWrites',        'myPendingIbufAIOReads',       # 25 - 26
+    'myPendingLogFlushes',        'myPendingLogWrites',          # 27 - 28
+    'myPendingNormalAIOReads',    'myPendingNormalAIOWrites',    # 29 - 30
+    'myIbufInserts',              'myIbufMerged',                # 31 - 32
+    'myIbufMerges',               'mySpinWaits',                 # 33 - 34
+    'mySpinRounds',               'myOsWaits',                   # 35 - 36
+    'myRowsInserted',             'myRowsUpdated',               # 37 - 38
+    'myRowsDeleted',              'myRowsRead',                  # 39 - 40
+    'myTableLocksWaited',         'myTableLocksImmediate',       # 41 - 42
+    'mySlowQueries',              'myOpenFiles',                 # 43 - 44
+    'myOpenTables',               'myOpenedTables',              # 45 - 46
+    'myInnodbOpenFiles',          'myOpenFilesLimit',            # 47 - 48
+    'myTableCache',               'myAbortedClients',            # 49 - 50
+    'myAbortedConnects',          'myMaxUsedConnections',        # 51 - 52
+    'mySlowLaunchThreads',        'myThreadsCached',             # 53 - 54
+    'myThreadsConnected',         'myThreadsCreated',            # 55 - 56
+    'myThreadsRunning',           'myMaxConnections',            # 57 - 58
+    'myThreadCacheSize',          'myConnections',               # 59 - 60
+    'mySlaveRunning',             'mySlaveStopped',              # 61 - 62
+    'mySlaveRetriedTransactions', 'mySlaveLag',                  # 63 - 64
+    'mySlaveOpenTempTables',      'myQcacheFreeBlocks',          # 65 - 66
+    'myQcacheFreeMemory',         'myQcacheHits',                # 67 - 68
+    'myQcacheInserts',            'myQcacheLowmemPrunes',        # 69 - 70
+    'myQcacheNotCached',          'myQcacheQueriesInCache',      # 71 - 72
+    'myQcacheTotalBlocks',        'myQueryCacheSize',            # 73 - 74
+    'myQuestions',                'myComUpdate',                 # 75 - 76
+    'myComInsert',                'myComSelect',                 # 77 - 78
+    'myComDelete',                'myComReplace',                # 79 - 80
+    'myComLoad',                  'myComUpdateMulti',            # 81 - 82
+    'myComInsertSelect',          'myComDeleteMulti',            # 83 - 84
+    'myComReplaceSelect',         'mySelectFullJoin',            # 85 - 86
+    'mySelectFullRangeJoin',      'mySelectRange',               # 87 - 88
+    'mySelectRangeCheck',         'mySelectScan',                # 89 - 90
+    'mySortMergePasses',          'mySortRange',                 # 91 - 92
+    'mySortRows',                 'mySortScan',                  # 93 - 94
+    'myCreatedTmpTables',         'myCreatedTmpDiskTables',      # 95 - 96
+    'myCreatedTmpFiles',          'myBytesSent',                 # 97 - 98
+    'myBytesReceived',            'myInnodbLogBufferSize',       # 99 - 100
+    'myUnflushedLog',             'myLogBytesFlushed',           # 101 - 102
+    'myLogBytesWritten',          'myRelayLogSpace',             # 103 - 104
+    'myBinlogCacheSize',          'myBinlogCacheDiskUse',        # 105 - 106
+    'myBinlogCacheUse',           'myBinaryLogSpace',            # 107 - 108
+    'myStateClosingTables',       'myStateCopyingToTmpTable',    # 109 - 110
+    'myStateEnd',                 'myStateFreeingItems',         # 111 - 112
+    'myStateInit',                'myStateLocked',               # 113 - 114
+    'myStateLogin',               'myStatePreparing',            # 115 - 116
+    'myStateReadingFromNet',      'myStateSendingData',          # 117 - 118
+    'myStateSortingResult',       'myStateStatistics',           # 119 - 120
+    'myStateUpdating',            'myStateWritingToNet',         # 121 - 122
+    'myStateNone',                'myStateOther',                # 123 - 124
+    'myAdditionalPoolAlloc',      'myTotalMemAlloc',             # 125 - 126
+    'myHashIndexCellsTotal',      'myHashIndexCellsUsed',        # 127 - 128
+    'myInnoDBLockStructs',        'myInnoDBLockWaitSecs',        # 129 - 130
+    'myInnoDBTablesInUse',        'myInnoDBLockedTables',        # 131 - 132
+    'myUncheckpointedBytes',      'myIBufCellCount',             # 133 - 134
+    'myIBufUsedCells',            'myIBufFreeCells',             # 135 - 136
+    'myAdaptiveHashMemory',       'myPageHashMemory',            # 137 - 138
+    'myDictionaryCacheMemory',    'myFileSystemMemory',          # 139 - 140
+    'myLockSystemMemory',         'myRecoverySystemMemory',      # 141 - 142
+    'myThreadHashMemory',                                        # 143 - 143
 );
 
 my @oldkeys = (
-    'Key_read_requests',          'Key_reads',
-    'Key_write_requests',         'Key_writes',
-    'history_list',               'innodb_transactions',
-    'read_views',                 'current_transactions',
-    'locked_transactions',        'active_transactions',
-    'pool_size',                  'free_pages',
-    'database_pages',             'modified_pages',
-    'pages_read',                 'pages_created',
-    'pages_written',              'file_fsyncs',
-    'file_reads',                 'file_writes',
-    'log_writes',                 'pending_aio_log_ios',
-    'pending_aio_sync_ios',       'pending_buf_pool_flushes',
-    'pending_chkp_writes',        'pending_ibuf_aio_reads',
-    'pending_log_flushes',        'pending_log_writes',
-    'pending_normal_aio_reads',   'pending_normal_aio_writes',
-    'ibuf_inserts',               'ibuf_merged',
-    'ibuf_merges',                'spin_waits',
-    'spin_rounds',                'os_waits',
-    'rows_inserted',              'rows_updated',
-    'rows_deleted',               'rows_read',
-    'Table_locks_waited',         'Table_locks_immediate',
-    'Slow_queries',               'Open_files',
-    'Open_tables',                'Opened_tables',
-    'innodb_open_files',          'open_files_limit',
-    'table_cache',                'Aborted_clients',
-    'Aborted_connects',           'Max_used_connections',
-    'Slow_launch_threads',        'Threads_cached',
-    'Threads_connected',          'Threads_created',
-    'Threads_running',            'max_connections',
-    'thread_cache_size',          'Connections',
-    'slave_running',              'slave_stopped',
-    'Slave_retried_transactions', 'slave_lag',
-    'Slave_open_temp_tables',     'Qcache_free_blocks',
-    'Qcache_free_memory',         'Qcache_hits',
-    'Qcache_inserts',             'Qcache_lowmem_prunes',
-    'Qcache_not_cached',          'Qcache_queries_in_cache',
-    'Qcache_total_blocks',        'query_cache_size',
-    'Questions',                  'Com_update',
-    'Com_insert',                 'Com_select',
-    'Com_delete',                 'Com_replace',
-    'Com_load',                   'Com_update_multi',
-    'Com_insert_select',          'Com_delete_multi',
-    'Com_replace_select',         'Select_full_join',
-    'Select_full_range_join',     'Select_range',
-    'Select_range_check',         'Select_scan',
-    'Sort_merge_passes',          'Sort_range',
-    'Sort_rows',                  'Sort_scan',
-    'Created_tmp_tables',         'Created_tmp_disk_tables',
-    'Created_tmp_files',          'Bytes_sent',
-    'Bytes_received',             'innodb_log_buffer_size',
-    'unflushed_log',              'log_bytes_flushed',
-    'log_bytes_written',          'relay_log_space',
-    'binlog_cache_size',          'Binlog_cache_disk_use',
-    'Binlog_cache_use',           'binary_log_space',
-    'State_closing_tables',       'State_copying_to_tmp_table' ,
-    'State_end',                  'State_freeing_items',
-    'State_init',                 'State_locked',
-    'State_login',                'State_preparing',
-    'State_reading_from_net',     'State_sending_data',
-    'State_sorting_result',       'State_statistics',
-    'State_updating',             'State_writing_to_net',
-    'State_none',                 'State_other', 
-    'additional_pool_alloc',      'total_mem_alloc',
-    'hash_index_cells_total',     'hash_index_cells_used',
-    'innodb_lock_structs',        'innodb_lock_wait_secs',
-    'innodb_tables_in_use',       'innodb_locked_tables',
-    'uncheckpointed_bytes',       'ibuf_cell_count',
-    'ibuf_used_cells',            'ibuf_free_cells',
-    'adaptive_hash_memory',       'page_hash_memory',
-    'dictionary_cache_memory',    'file_system_memory',
-    'lock_system_memory',         'recovery_system_memory',
-    'thread_hash_memory'
+    'Key_read_requests',          'Key_reads',                     # 1 - 2
+    'Key_write_requests',         'Key_writes',                    # 3 - 4
+    'history_list',               'innodb_transactions',           # 5 - 6
+    'read_views',                 'current_transactions',          # 7 - 8
+    'locked_transactions',        'active_transactions',           # 9 - 10
+    'pool_size',                  'free_pages',                    # 11 - 12
+    'database_pages',             'modified_pages',                # 13 - 14
+    'pages_read',                 'pages_created',                 # 15 - 16
+    'pages_written',              'file_fsyncs',                   # 17 - 18
+    'file_reads',                 'file_writes',                   # 19 - 20
+    'log_writes',                 'pending_aio_log_ios',           # 21 - 22
+    'pending_aio_sync_ios',       'pending_buf_pool_flushes',      # 23 - 24
+    'pending_chkp_writes',        'pending_ibuf_aio_reads',        # 25 - 26
+    'pending_log_flushes',        'pending_log_writes',            # 27 - 28
+    'pending_normal_aio_reads',   'pending_normal_aio_writes',     # 29 - 30
+    'ibuf_inserts',               'ibuf_merged',                   # 31 - 32
+    'ibuf_merges',                'spin_waits',                    # 33 - 34
+    'spin_rounds',                'os_waits',                      # 35 - 36
+    'rows_inserted',              'rows_updated',                  # 37 - 38
+    'rows_deleted',               'rows_read',                     # 39 - 40
+    'Table_locks_waited',         'Table_locks_immediate',         # 41 - 42
+    'Slow_queries',               'Open_files',                    # 43 - 44
+    'Open_tables',                'Opened_tables',                 # 45 - 46
+    'innodb_open_files',          'open_files_limit',              # 47 - 48
+    'table_cache',                'Aborted_clients',               # 49 - 50
+    'Aborted_connects',           'Max_used_connections',          # 51 - 52
+    'Slow_launch_threads',        'Threads_cached',                # 53 - 54
+    'Threads_connected',          'Threads_created',               # 55 - 56
+    'Threads_running',            'max_connections',               # 57 - 58
+    'thread_cache_size',          'Connections',                   # 59 - 60
+    'slave_running',              'slave_stopped',                 # 61 - 62
+    'Slave_retried_transactions', 'slave_lag',                     # 63 - 64
+    'Slave_open_temp_tables',     'Qcache_free_blocks',            # 65 - 66
+    'Qcache_free_memory',         'Qcache_hits',                   # 67 - 68
+    'Qcache_inserts',             'Qcache_lowmem_prunes',          # 69 - 70
+    'Qcache_not_cached',          'Qcache_queries_in_cache',       # 71 - 72
+    'Qcache_total_blocks',        'query_cache_size',              # 73 - 74
+    'Questions',                  'Com_update',                    # 75 - 76
+    'Com_insert',                 'Com_select',                    # 77 - 78
+    'Com_delete',                 'Com_replace',                   # 79 - 80
+    'Com_load',                   'Com_update_multi',              # 81 - 82
+    'Com_insert_select',          'Com_delete_multi',              # 83 - 84
+    'Com_replace_select',         'Select_full_join',              # 85 - 86
+    'Select_full_range_join',     'Select_range',                  # 87 - 88
+    'Select_range_check',         'Select_scan',                   # 89 - 90
+    'Sort_merge_passes',          'Sort_range',                    # 91 - 92
+    'Sort_rows',                  'Sort_scan',                     # 93 - 94
+    'Created_tmp_tables',         'Created_tmp_disk_tables',       # 95 - 96
+    'Created_tmp_files',          'Bytes_sent',                    # 97 - 98
+    'Bytes_received',             'innodb_log_buffer_size',        # 99 - 100
+    'unflushed_log',              'log_bytes_flushed',             # 101 - 102
+    'log_bytes_written',          'relay_log_space',               # 103 - 104
+    'binlog_cache_size',          'Binlog_cache_disk_use',         # 105 - 106
+    'Binlog_cache_use',           'binary_log_space',              # 107 - 108
+    'State_closing_tables',       'State_copying_to_tmp_table',    # 109 - 110
+    'State_end',                  'State_freeing_items',           # 111 - 112
+    'State_init',                 'State_locked',                  # 113 - 114
+    'State_login',                'State_preparing',               # 115 - 116
+    'State_reading_from_net',     'State_sending_data',            # 117 - 118
+    'State_sorting_result',       'State_statistics',              # 119 - 120
+    'State_updating',             'State_writing_to_net',          # 121 - 122
+    'State_none',                 'State_other',                   # 123 - 124
+    'additional_pool_alloc',      'total_mem_alloc',               # 125 - 126
+    'hash_index_cells_total',     'hash_index_cells_used',         # 127 - 128
+    'innodb_lock_structs',        'innodb_lock_wait_secs',         # 129 - 130
+    'innodb_tables_in_use',       'innodb_locked_tables',          # 131 - 132
+    'uncheckpointed_bytes',       'ibuf_cell_count',               # 133 - 134
+    'ibuf_used_cells',            'ibuf_free_cells',               # 135 - 136
+    'adaptive_hash_memory',       'page_hash_memory',              # 137 - 138
+    'dictionary_cache_memory',    'file_system_memory',            # 139 - 140
+    'lock_system_memory',         'recovery_system_memory',        # 141 - 142
+    'thread_hash_memory',                                          # 143 - 143
 );
 
 run() unless caller();
@@ -545,7 +550,7 @@ run() unless caller();
 # daemonize the program
 sub daemonize {
     open STDIN, '/dev/null' or die "mysql-agent: can't read /dev/null: $!";
-    open STDOUT, '>/dev/null' or die "mysql-agent: can't write to /dev/null: $!";    
+    open STDOUT, '>/dev/null' or die "mysql-agent: can't write to /dev/null: $!";
     defined(my $pid = fork) or die "mysql-agent: can't fork: $!";
     if ($pid) {
         # parent
@@ -601,7 +606,7 @@ sub fetch_mysql_data {
             'State_updating'             => 0,
             'State_writing_to_net'       => 0,
             'State_none'                 => 0,
-            'State_other'                => 0, 
+            'State_other'                => 0,
         );
 
         my $result = $dbh->selectall_arrayref("SHOW /*!50002 GLOBAL */ STATUS");
@@ -622,25 +627,25 @@ sub fetch_mysql_data {
         }
 
         if ($opt{slave}) {
-			$result = $dbh->selectall_arrayref("SHOW SLAVE STATUS", { Slice => {} });
+            $result = $dbh->selectall_arrayref("SHOW SLAVE STATUS", { Slice => {} });
 
-			foreach my $row (@$result)
-			{
-				# Must lowercase keys because different versions have different
-				# lettercase.
-				my %newrow = map { lc($_) => $row->{$_} } keys %$row;
-				$status{'relay_log_space'}	= $newrow{'relay_log_space'};
-				$status{'slave_lag'}		= $newrow{'seconds_behind_master'};
+            foreach my $row (@$result)
+            {
+                # Must lowercase keys because different versions have different
+                # lettercase.
+                my %newrow = map { lc($_) => $row->{$_} } keys %$row;
+                $status{'relay_log_space'}  = $newrow{'relay_log_space'};
+                $status{'slave_lag'}        = $newrow{'seconds_behind_master'};
 
-				# Check replication heartbeat, if present.
-				if ( $opt{heartbeat} ne '' ) {
-					my $row2 = $dbh->selectrow_arrayref("SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1) FROM $opt{heartbeat} WHERE id = 1");
-					$status{'slave_lag'} = $row2->[0];
-				}
+                # Check replication heartbeat, if present.
+                if ( $opt{heartbeat} ne '' ) {
+                    my $row2 = $dbh->selectrow_arrayref("SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1) FROM $opt{heartbeat} WHERE id = 1");
+                    $status{'slave_lag'} = $row2->[0];
+                }
 
-				$status{'slave_running'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 1 : 0;
-				$status{'slave_stopped'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 0 : 1;
-			}
+                $status{'slave_running'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 1 : 0;
+                $status{'slave_stopped'} = ($newrow{'slave_sql_running'} eq 'Yes') ? 0 : 1;
+            }
         }
 
         # Get info on master logs.
@@ -668,7 +673,7 @@ sub fetch_mysql_data {
         if ($opt{innodb} && $status{'have_innodb'} eq 'YES') {
             my $innodb_array = $dbh->selectall_arrayref("SHOW /*!50000 ENGINE*/ INNODB STATUS",{Slice => {}});
             my @lines = split("\n", $innodb_array->[0]{'Status'});
-            
+
             my $innodb_parser = InnoDBParser->new();
             my $out = $innodb_parser->parse_innodb_status(\@lines);
 

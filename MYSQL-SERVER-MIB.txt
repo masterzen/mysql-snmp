@@ -55,6 +55,14 @@ mySQL		MODULE-IDENTITY
 -- Current MySQL core MIB entries
 --  myStatus		OBJECT IDENTIFIER ::= { mySQL 1 }
 
+mySQLUnsigned64 ::= TEXTUAL-CONVENTION
+    STATUS  current
+    DESCRIPTION
+    "A 64 bits unsigned (which doesn't exist in SMIv2) containing any unsigned 64 bits
+    integer number. It is defined as a Counter64 but doesn't carry the counter semantic"
+    
+    SYNTAX  Counter64
+
 myStatus		OBJECT IDENTIFIER ::= { mySQL 1 }
 
 myKeyReadRequests OBJECT-TYPE
@@ -1061,7 +1069,7 @@ myStateOther OBJECT-TYPE
     ::= { myStatus 124 }
 
 myAdditionalPoolAlloc OBJECT-TYPE
-    SYNTAX	Gauge32
+    SYNTAX	mySQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1069,7 +1077,7 @@ myAdditionalPoolAlloc OBJECT-TYPE
     ::= { myStatus 125 }
 
 myTotalMemAlloc OBJECT-TYPE
-    SYNTAX	Gauge32
+    SYNTAX	mySQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1157,7 +1165,7 @@ myIBufFreeCells OBJECT-TYPE
     ::= { myStatus 136 }
 
 myAdaptiveHashMemory OBJECT-TYPE
-    SYNTAX	Gauge32
+    SYNTAX	mySQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1165,7 +1173,7 @@ myAdaptiveHashMemory OBJECT-TYPE
     ::= { myStatus 137 }
 
 myPageHashMemory OBJECT-TYPE
-    SYNTAX	Gauge32
+    SYNTAX	mySQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1173,7 +1181,7 @@ myPageHashMemory OBJECT-TYPE
     ::= { myStatus 138 }
 
 myDictionaryCacheMemory OBJECT-TYPE
-    SYNTAX	Gauge32
+    SYNTAX	mySQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1181,7 +1189,7 @@ myDictionaryCacheMemory OBJECT-TYPE
     ::= { myStatus 139 }
 
 myFileSystemMemory OBJECT-TYPE
-    SYNTAX	Gauge32
+    SYNTAX	mySQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1189,7 +1197,7 @@ myFileSystemMemory OBJECT-TYPE
     ::= { myStatus 140 }
 
 myLockSystemMemory OBJECT-TYPE
-    SYNTAX	Gauge32
+    SYNTAX	mySQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1197,7 +1205,7 @@ myLockSystemMemory OBJECT-TYPE
     ::= { myStatus 141 }
 
 myRecoverySystemMemory OBJECT-TYPE
-    SYNTAX	Gauge32
+    SYNTAX	mySQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1205,7 +1213,7 @@ myRecoverySystemMemory OBJECT-TYPE
     ::= { myStatus 142 }
 
 myThreadHashMemory OBJECT-TYPE
-    SYNTAX	Gauge32
+    SYNTAX	mySQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
