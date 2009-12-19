@@ -107,9 +107,6 @@ sub parse_innodb_status {
            # ------- TRX HAS BEEN WAITING 32 SEC FOR THIS LOCK TO BE GRANTED:
            $status{'innodb_lock_wait_secs'} = $self->tonum($row[5]);
         }
-        elsif ($txn_seen && $line =~ m/LOCK WAIT/) {
-            $status{'locked_transactions'} = $status{'locked_transactions'} + 1;
-        }
         elsif ($line =~ m/read views open inside/) {
             $status{'read_views'} = $self->tonum($row[0]);
         }
@@ -118,9 +115,17 @@ sub parse_innodb_status {
            $status{'innodb_tables_in_use'} += $self->tonum($row[4]);
            $status{'innodb_locked_tables'} += $self->tonum($row[6]);
         }
-        elsif ($line =~ m/lock struct\(s\)/) {
-           # 23 lock struct(s), heap size 3024, undo log entries 27
-           $status{'innodb_lock_structs'} += $self->tonum($row[0]);
+        elsif ($txn_seen && $line =~ m/lock struct\(s\)/) {
+            # 23 lock struct(s), heap size 3024, undo log entries 27
+            # LOCK WAIT 12 lock struct(s), heap size 3024, undo log entries 5
+            # LOCK WAIT 2 lock struct(s), heap size 368
+            if ( $line =~ m/LOCK WAIT/ ) {
+               $status{'innodb_lock_structs'} += $self->tonum($row[2]);
+               $status{'locked_transactions'} += 1;
+            }
+            else {
+                $status{'innodb_lock_structs'} += $self->tonum($row[0]);
+            }
         }
         # FILE I/O
         elsif ($line =~ m/OS file reads/) {

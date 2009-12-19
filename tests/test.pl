@@ -4,14 +4,14 @@ BEGIN {
     require 'mysql-agent';
 }
 
-use Test::More tests => 9;
+use Test::More tests => 10;
 use Data::Dumper;
 
 sub readfile
 {
     my $file = shift;
     my @lines = ();
-    
+
     open(my $fh, "<", $file);
     while( <$fh> ) {
         chomp($_);
@@ -192,8 +192,6 @@ is_deeply(
        'thread_hash_memory'        => '83176',
        'innodb_locked_tables'      => '0',
        'innodb_lock_wait_secs'     => '0',
-       'innodb_lock_structs'       => '0',
-       'innodb_lock_structs'       => '0',
        'innodb_tables_in_use'      => '0',
    },
    'tests/data/xtradb_01.txt'
@@ -265,8 +263,69 @@ is_deeply(
        'innodb_locked_tables'      => '0',
        'innodb_lock_wait_secs'     => '0',
        'innodb_lock_structs'       => '0',
-       'innodb_lock_structs'       => '0',
        'innodb_tables_in_use'      => '0',
    },
    'tests/data/5.0.txt'
+);
+
+is_deeply(
+   $innodb_parser->parse_innodb_status(readfile('tests/data/lock.txt')),
+   {
+       'spin_waits'                => '31',
+       'spin_rounds'               => '220',
+       'os_waits'                  => '17',
+       'innodb_transactions'       => '3411',
+       'unpurged_txns'             => '11',
+       'history_list'              => '19',
+       'current_transactions'      => '2',
+       'active_transactions'       => '2',
+       'innodb_tables_in_use'      => '1',
+       'innodb_locked_tables'      => '1',
+       'locked_transactions'       => 1,
+       'innodb_lock_structs'       => '9',
+       'pending_normal_aio_reads'  => '0',
+       'pending_normal_aio_writes' => '0',
+       'pending_ibuf_aio_reads'    => '0',
+       'pending_aio_log_ios'       => '0',
+       'pending_aio_sync_ios'      => '0',
+       'pending_log_flushes'       => '0',
+       'pending_buf_pool_flushes'  => '0',
+       'file_reads'                => '42',
+       'file_writes'               => '168',
+       'file_fsyncs'               => '149',
+       'ibuf_inserts'              => '0',
+       'ibuf_merged'               => '0',
+       'ibuf_merges'               => '0',
+       'log_bytes_written'         => '103216',
+       'unflushed_log'             => '0',
+       'log_bytes_flushed'         => '103216',
+       'pending_log_writes'        => '0',
+       'pending_chkp_writes'       => '0',
+       'log_writes'                => '72',
+       'pool_size'                 => '512',
+       'free_pages'                => '476',
+       'database_pages'            => '35',
+       'modified_pages'            => '0',
+       'pages_read'                => '33',
+       'pages_created'             => '48',
+       'pages_written'             => '148',
+       'queries_inside'            => '0',
+       'queries_queued'            => '0',
+       'read_views'                => '2',
+       'rows_inserted'             => '5',
+       'rows_updated'              => '0',
+       'rows_deleted'              => '0',
+       'rows_read'                 => '10',
+       'innodb_lock_wait_secs'     => '32',
+       'hash_index_cells_total'    => '17393',
+       'hash_index_cells_used'     => '0',
+       'total_mem_alloc'           => '20557306',
+       'additional_pool_alloc'     => '744704',
+       'last_checkpoint'           => '103216',
+       'uncheckpointed_bytes'      => '0',
+       'ibuf_used_cells'           => '1',
+       'ibuf_free_cells'           => '0',
+       'ibuf_cell_count'           => '2',
+   },
+   'tests/data/lock.txt'
 );
