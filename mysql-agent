@@ -830,15 +830,16 @@ sub shut_it_down {
 }
 
 sub set_value {
-    my ($request, $oid) = @_;
+    my ($request, $oid, $request_info) = @_;
 
     if (!$error) {
         my $oidname = $oids{$oid}->{'name'};
         if (!defined $oidname) {
             if ($oid != $regOID) {
-                dolog(LOG_ERR, "Error finding a oidname for $oid");
+                dolog(LOG_INFO, "OID $oid is not available");
+                $request->setError($request_info, SNMP_ERR_NOSUCHNAME);
             }
-            return;
+            return 0;
         }
 
         my $value = $global_status{$oidname}{'value'};
@@ -851,9 +852,11 @@ sub set_value {
             $request->setValue(getASNType($global_status{$oidname}{'type'}), "$value");
         }
         else {
-            dolog(LOG_ERR, "Error getting value $oidname for $oid");
+            dolog(LOG_DEBUG, "OID $oid has no value") if ($opt{verbose});
+            return 0;
         }
     }
+    return 1;
 }
 
 sub my_snmp_handler {
@@ -875,15 +878,16 @@ sub my_snmp_handler {
         }
 
         if ($mode == MODE_GET) {
-            set_value($request, $oid);
+            set_value($request, $oid, $request_info);
         }
 
         if ($mode == MODE_GETNEXT) {
             if ($oid < $lowestOid) {
-                set_value($request, $lowestOid);
+                set_value($request, $lowestOid, $request_info);
             }
             elsif ($oid < $highestOid) #request is somewhere in our range, so return first one after it
             {
+                my $lasti = 0;
                 my $i = 0;
                 my $oidToUse = undef;
 
@@ -896,7 +900,12 @@ sub my_snmp_handler {
                 #got one to return
                 if (defined $oidToUse) {
                     dolog(LOG_DEBUG, "Next oid to $oid is $oidToUse") if ($opt{verbose});
-                    set_value($request, $oidToUse);
+                    while (!set_value($request, $oidToUse, $request_info)) {
+                        # got not value, we need to get the next oid
+                        $oidToUse = $ks[$i];
+                        $i++;
+                        last if $i > scalar @ks;
+                    }
                 }
             }
         }
