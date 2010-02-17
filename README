@@ -22,8 +22,16 @@ This software is released under the GPL v2.
 REQUIREMENTS
 ============
 
-This package requires Net-SNMP version 5.4.2 or better (because of some
-bugs in previous versions).
+This package requires Net-SNMP version 5.4.2 or better.
+
+It also to be noted that the patches I provided that was included in 5.4.2 wasn't
+completely applied, thus counter64 exported from a perl subagent are broken.
+
+It means that for the moment the only way to have correct 64 bits mib objects is 
+to apply the following patch to net-snmp:
+http://sourceforge.net/tracker/?func=detail&aid=2890931&group_id=12694&atid=312694
+
+Note: this patch is now included upstream, but not yet available in a tarball version.
 
 INSTALL
 =======

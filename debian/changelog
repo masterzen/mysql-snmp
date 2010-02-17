@@ -1,8 +1,8 @@
-mysql-snmp (1.0rc1-2) unstable; urgency=low
+mysql-snmp (1.0-1) unstable; urgency=low
 
-  * fix debian init.d script (-d maps to --daemon-pid and not --daemon)
+  * new upstream version
 
- -- brice <brice+debian@daysofwonder.com>  Sat, 31 Oct 2009 14:32:49 +0100
+ -- brice <brice+debian@daysofwonder.com>  Sun, 10 Jan 2010 17:23:15 +0100
 
 mysql-snmp (1.0rc1-1) unstable; urgency=low
 
