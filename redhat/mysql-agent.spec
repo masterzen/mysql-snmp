@@ -1,6 +1,6 @@
 Name:           mysql-agent
-Version:        1.0rc1
-Release:        2%{?dist}
+Version:        1.0
+Release:        1%{?dist}
 Summary:        SNMP monitoring agent for MySQL
 
 Group:          Applications/Databases
@@ -52,6 +52,10 @@ install -m 644 MYSQL-SERVER-MIB.txt ${RPM_BUILD_ROOT}%{_datadir}/snmp/mibs
 %{_datadir}/snmp/mibs/*
 
 %changelog
+* Wed Feb 17 2010 Robin Bowes <rpmbuild@yo61.net> - 1.0
+v1.0 release
+* Mon Nov 16 2009 Robin Bowes <rpmbuild@yo61.net> - 1.0rc2-1
+Bump to rc2 version
 * Sat Oct 31 2009 Brice Figureau <brice@daysofwonder.com> - 1.0rc1-1
 New version
 * Sat Oct 24 2009 Brice Figureau <brice@daysofwonder.com> - 0.8-1
