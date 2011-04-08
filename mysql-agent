@@ -35,7 +35,7 @@ use Data::Dumper;
 
 # Math::BigInt reverts to perl only
 # automatically if GMP is not installed
-use Math::BigInt lib => 'GMP';
+use Math::BigInt try => 'GMP';
 
 sub new {
    bless {}, shift;
@@ -942,11 +942,11 @@ sub run
         'refresh|r=i',
         'daemon_pid|daemon-pid=s',
         'heartbeat|b=s',
-        'no-daemon',
+        'no-daemon|n',
         'man',
         'usage',
         'verbose|v+',
-        "version" => sub {VersionMessage()},
+        'version|V' => sub {VersionMessage()},
     ) or pod2usage(-verbose => 0);
 
     pod2usage(-verbose => 0) if $opt{usage};
