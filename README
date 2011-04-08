@@ -82,6 +82,8 @@ On all platform, the configuration is done with command line arguments:
 -s|--slave              check slave
 -b|--heartbeat DB.TABLE table for maatkit mk-heartbeat 
 --oid OID               registering OID
+-l|--process-list|--procs
+                        enable the MySQL process list
 -i|--refresh            refresh interval in seconds
 
 You can specify the mysql connection parameters in a config file using my.cnf format, like this:

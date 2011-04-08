@@ -939,6 +939,7 @@ sub run
         'slave|s!',
         'innodb|i!',
         'oid|o',
+        'procs|l|process-list!',
         'refresh|r=i',
         'daemon_pid|daemon-pid=s',
         'heartbeat|b=s',
@@ -1027,6 +1028,7 @@ __END__
     -b, --heartbeat DB.TABLE  table for checking slave lag with mk-hearbeat
     -i, --innodb              read innodb settings
     -o OID, --oid=OID         registering OID
+    -l, --process-list, --procs  enable the process list
     -r INT, --refresh=INT     set refresh interval to INT (seconds)
     --daemon-pid=FILE         write PID to FILE instead of $default{pid}
     -n, --no-daemon           do not detach and become a daemon
@@ -1088,6 +1090,10 @@ check innodb details
 =item B<-o OID, --oid=OID>
 
 registering OID
+
+=item B<-l, --process-list, --procs>
+
+enable the process list
 
 =item B<-r INT, --refresh=INT>
 
