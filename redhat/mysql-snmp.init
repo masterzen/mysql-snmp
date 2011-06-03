@@ -1,14 +1,14 @@
 #! /bin/sh
 #
-# mysql-agent   Init script for running the mysql snmp agent daemon
+# mysql-snmp    Init script for running the mysql snmp agent daemon
 #
 # Author:       Robin Bowes <robin@robinbowes.com>
 #
 # chkconfig: - 98 02
 #
 # description: Enables monitoring of MySQL through SNMP
-# processname: mysql-agent
-# config: /etc/sysconfig/mysql-agent
+# processname: mysql-snmp
+# config: /etc/sysconfig/mysql-snmp
 #
 # This script is based on a debian init script written by Brice Figureau
 #
@@ -19,10 +19,10 @@ PATH=/sbin:/bin:/usr/sbin:/usr/bin
 # Source function library.
 . /etc/rc.d/init.d/functions
 
-prog=mysql-agent
+prog=mysql-snmp
 daemon="/usr/sbin/$prog"
 
-# Include mysql-agent defaults if available
+# Include mysql-snmp defaults if available
 if [ -e /etc/sysconfig/$prog ] ; then
         . /etc/sysconfig/$prog
 fi

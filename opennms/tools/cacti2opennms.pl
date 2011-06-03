@@ -393,7 +393,7 @@ Possible choices are:
   * graph: outputs the content of the snmp-graph.properties
   * graphlist: outputs the content of the snmp-graph.properties reports key
   * datacollection: outputs the content of the datacollections-config.xml file
-  * agent: outputs the needed array for mysql-agent
+  * agent: outputs the needed array for mysql-snmp
 
 =item B<--man>
 
@@ -415,7 +415,7 @@ output version information and exit
 
 =head1 DESCRIPTION
 
-B<mysql-agent> is a small daemon that connects to a local snmpd daemon
+B<mysql-snmp> is a small daemon that connects to a local snmpd daemon
 to report statistics on a local or remote MySQL server.
 
 =cut

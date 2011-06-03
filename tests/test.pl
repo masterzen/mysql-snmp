@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 BEGIN {
-    require 'mysql-agent';
+    require 'mysql-snmp';
 }
 
 use Test::More tests => 11;
