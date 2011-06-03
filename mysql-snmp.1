@@ -16,12 +16,12 @@
 .\" .sp <n>    insert n+1 empty lines
 .\" for manpage-specific macros, see man(7)
 .SH NAME
-mysql-agent \- MySQL-Server SNMP agent for Net-SNMP
+mysql-snmp \- MySQL-Server SNMP agent for Net-SNMP
 .SH SYNOPSIS
-.B mysql-agent
+.B mysql-snmp
 .RI "[ options ]"
 .SH DESCRIPTION
-.B mysql-agent
+.B mysql-snmp
 is a Net-SNMP (snmpd) agent that can be used to monitor a MySQL server with SNMP. 
 .PP
 .\" TeX users may be more comfortable with the \fB<whatever>\fP and
@@ -44,7 +44,7 @@ output version information and exit
 
 .TP
 .B \-\-daemon-pid=FILE
-write PID to FILE instead of /var/run/mysql-agent.pid
+write PID to FILE instead of /var/run/mysql-snmp.pid
 
 .TP
 .B \-u DBUSER
@@ -105,7 +105,7 @@ password=secret
 .BR snmpcmd (1).
 .br
 .SH AUTHOR
-mysql-agent was written by Brice Figureau
+mysql-snmp was written by Brice Figureau
 .PP
 This manual page was written by Brice Figureau <brice@daysofwonder.com>,
 for the Debian project (but may be used by others).

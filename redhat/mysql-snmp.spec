@@ -1,5 +1,5 @@
-Name:           mysql-agent
-Version:        1.0
+Name:           mysql-snmp
+Version:        1.1
 Release:        1%{?dist}
 Summary:        SNMP monitoring agent for MySQL
 
@@ -14,6 +14,7 @@ Requires:       perl(DBI), perl(DBD::mysql) >= 1.0, perl(Unix::Syslog)
 Requires:       perl(SNMP), perl(NetSNMP::OID), perl(NetSNMP::agent), perl(NetSNMP::ASN)
 Requires:       perl(NetSNMP::agent::default_store), perl(NetSNMP::default_store)
 Requires:       net-snmp >= 5.4.2
+Obsoletes:      mysql-agent
 
 %description
 mysql-snmp is a small daemon that connects to a local snmpd daemon
@@ -30,12 +31,12 @@ install -d ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig
 install -d ${RPM_BUILD_ROOT}%{_sysconfdir}/snmp
 install -d ${RPM_BUILD_ROOT}%{_mandir}/man1
 install -d ${RPM_BUILD_ROOT}%{_datadir}/snmp/mibs
-install -c -m 755 mysql-agent ${RPM_BUILD_ROOT}%{_sbindir} 
-install -c -m 755 redhat/mysql-agent.init ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
-install -c -m 644 redhat/mysql-agent.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/%{name}
+install -c -m 755 mysql-snmp ${RPM_BUILD_ROOT}%{_sbindir} 
+install -c -m 755 redhat/mysql-snmp.init ${RPM_BUILD_ROOT}%{_initrddir}/%{name}
+install -c -m 644 redhat/mysql-snmp.sysconfig ${RPM_BUILD_ROOT}%{_sysconfdir}/sysconfig/%{name}
 install -c -m 600 my.cnf ${RPM_BUILD_ROOT}%{_sysconfdir}/snmp
-install -c -m 644 mysql-agent.1 ${RPM_BUILD_ROOT}%{_mandir}/man1
-gzip ${RPM_BUILD_ROOT}%{_mandir}/man1/mysql-agent.1 
+install -c -m 644 mysql-snmp.1 ${RPM_BUILD_ROOT}%{_mandir}/man1
+gzip ${RPM_BUILD_ROOT}%{_mandir}/man1/mysql-snmp.1 
 install -m 644 MYSQL-SERVER-MIB.txt ${RPM_BUILD_ROOT}%{_datadir}/snmp/mibs
 
 %clean

@@ -14,11 +14,11 @@
 build:
 
 install:
-	install -m 755 mysql-agent $(DESTDIR)/usr/sbin/mysql-agent
+	install -m 755 mysql-snmp $(DESTDIR)/usr/sbin/mysql-snmp
 	install -m 644 MYSQL-SERVER-MIB.txt $(DESTDIR)/usr/share/snmp/mibs
-	install -m 644 mysql-agent.1 $(DESTDIR)/usr/share/man/man1
-	gzip $(DESTDIR)/usr/share/man/man1/mysql-agent.1
+	install -m 644 mysql-snmp.1 $(DESTDIR)/usr/share/man/man1
+	gzip $(DESTDIR)/usr/share/man/man1/mysql-snmp.1
 
 clean:
-	-rm $(DESTDIR)/usr/sbin/mysql-agent
+	-rm $(DESTDIR)/usr/sbin/mysql-snmp
 	
