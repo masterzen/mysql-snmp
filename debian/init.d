@@ -25,11 +25,11 @@
 ### END INIT INFO
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/mysql-agent
+DAEMON=/usr/sbin/mysql-smnp
 DAEMON2="/usr/bin/perl"
-NAME=mysql-agent
+NAME=mysql-snmp
 DESC="Mysql SNMP Agent"
-PID_FILE=/var/run/mysql-agent.pid
+PID_FILE=/var/run/mysql-snmp.pid
 
 test -x $DAEMON || exit 0
 

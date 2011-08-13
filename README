@@ -4,7 +4,7 @@ Copyright (c) 2008,2009 Brice Figureau <brice.figureau@daysofwonder.com>
 PREAMBLE
 ========
 
-mysql-agent is a MySQL Net-SNMP agent written in Perl, and using the Net-Snmp 
+mysql-snmp is a MySQL Net-SNMP agent written in Perl, and using the Net-Snmp 
 Perl bindings.
 
 It connects to a mysql server and returns information to Net-SNMP when needed.
@@ -43,7 +43,7 @@ Please build the package:
 $ dpkg-buildpackage -rfakeroot -uc- b
 
 and install it
-Then, modify /etc/default/mysql-agent
+Then, modify /etc/default/mysql-snmp
 
 Other
 -----
@@ -82,6 +82,8 @@ On all platform, the configuration is done with command line arguments:
 -s|--slave              check slave
 -b|--heartbeat DB.TABLE table for maatkit mk-heartbeat 
 --oid OID               registering OID
+-l|--process-list|--procs
+                        enable the MySQL process list
 -i|--refresh            refresh interval in seconds
 
 You can specify the mysql connection parameters in a config file using my.cnf format, like this:
