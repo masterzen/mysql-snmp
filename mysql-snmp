@@ -801,7 +801,10 @@ sub fetch_mysql_data {
                 $status{$key} = $out->{$key};
             }
 
-            $status{'unflushed_log'} = max($status{'unflushed_log'}, $status{'innodb_log_buffer_size'});
+            if (defined($status{'unflushed_log'})) {
+                # it seems that unflushed_log is sometimes not defined...
+                $status{'unflushed_log'} = max($status{'unflushed_log'}, $status{'innodb_log_buffer_size'});
+            }
         }
 
 
