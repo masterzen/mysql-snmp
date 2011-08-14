@@ -744,12 +744,19 @@ sub fetch_mysql_data {
 
                 # Older versions of MySQL may not have the File_size column in the
                 # results of the command.
-                if (exists($newrow{'file_size'})) {
+                if (exists($newrow{'file_size'}) && $newrow{'file_size'} > 0) {
                     push(@binlogs, $newrow{'file_size'});
                 }
                 else {
                     last;
                 }
+            }
+        }
+
+        if (scalar @binlogs) {
+            $status{'binary_log_space'} = 0;
+            foreach my $log (@binlogs) {
+                $status{'binary_log_space'} += $log;
             }
         }
 
@@ -819,13 +826,6 @@ sub fetch_mysql_data {
                 else {
                     $status{"State_other"} += 1;
                 }
-            }
-        }
-
-        if (scalar @binlogs) {
-            $status{'binary_log_space'} = 0;
-            foreach my $log (@binlogs) {
-                $status{'binary_log_space'} += $log;
             }
         }
 
