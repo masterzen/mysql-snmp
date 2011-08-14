@@ -812,10 +812,10 @@ sub fetch_mysql_data {
             foreach my $row (@$result) {
                 my %newrow = map {lc($_) => $row->{$_}} keys %$row;
                 my $state = $newrow{'State'};
-                if ( defined($state) ) {
+                if ( !defined($state) ) {
                     $state = 'NULL';
                 }
-                if ( $state == '' ) {
+                if ( $state eq '' ) {
                     $state = 'none';
                 }
                 $state = lc($state);
