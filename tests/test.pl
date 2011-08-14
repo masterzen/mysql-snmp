@@ -124,6 +124,8 @@ is_deeply(
        'innodb_lock_wait_secs'     => '0',
        'innodb_lock_structs'       => '0',
        'innodb_tables_in_use'      => '0',
+       'innodb_sem_waits'          => '0',
+       'innodb_sem_wait_time_ms'   => '0',
    },
    'tests/data/innodb_out_001.txt'
 );
@@ -193,6 +195,8 @@ is_deeply(
        'innodb_locked_tables'      => '0',
        'innodb_lock_wait_secs'     => '0',
        'innodb_tables_in_use'      => '0',
+       'innodb_sem_waits'          => '0',
+       'innodb_sem_wait_time_ms'   => '0',
    },
    'tests/data/xtradb_01.txt'
 );
@@ -264,6 +268,8 @@ is_deeply(
        'innodb_lock_wait_secs'     => '0',
        'innodb_lock_structs'       => '0',
        'innodb_tables_in_use'      => '0',
+       'innodb_sem_waits'          => '0',
+       'innodb_sem_wait_time_ms'   => '0',
    },
    'tests/data/5.0.txt'
 );
@@ -333,6 +339,8 @@ is_deeply(
        'adaptive_hash_memory'      => '0',
        'page_hash_memory'          => '0',
        'dictionary_cache_memory'   => '0',
+       'innodb_sem_waits'          => '0',
+       'innodb_sem_wait_time_ms'   => '0',
    },
    'tests/data/lock.txt'
 );
@@ -403,6 +411,8 @@ is_deeply(
        'innodb_lock_wait_secs'     => '0',
        'innodb_lock_structs'       => '0',
        'innodb_tables_in_use'      => '0',
+       'innodb_sem_waits'          => '0',
+       'innodb_sem_wait_time_ms'   => '0',
    },
    'tests/data/issue5.txt'
 );

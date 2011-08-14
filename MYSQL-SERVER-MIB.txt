@@ -1220,4 +1220,21 @@ myThreadHashMemory OBJECT-TYPE
     "InnoDB thread hash memory used"
     ::= { myStatus 143 }
 
+myInnoDBSemWaits OBJECT-TYPE
+    SYNTAX	Counter64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of time innodb waited for semaphores"
+    ::= { myStatus 144 }
+
+myInooDBSemWaitTime OBJECT-TYPE
+    SYNTAX	Counter64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Total time innodb waited for semaphores"
+    ::= { myStatus 145 }
+
+
 END

@@ -107,7 +107,9 @@ sub parse_innodb_status {
         'file_system_memory'        => 0,
         'lock_system_memory'        => 0,
         'recovery_system_memory'    => 0,
-        'thread_hash_memory'        => 0
+        'thread_hash_memory'        => 0,
+        'innodb_sem_waits'          => 0,
+        'innodb_sem_wait_time_ms'   => 0
     );
     my $flushed_to;
     my $innodb_lsn;
@@ -133,6 +135,12 @@ sub parse_innodb_status {
             push(@os_waits,   $self->tonum($row[5]));
             push(@os_waits,   $self->tonum($row[11]));
         }
+        elsif ($line =~ /seconds the semaphore:/) {
+           # --Thread 907205 has waited at handler/ha_innodb.cc line 7156 for 1.00 seconds the semaphore:
+           $status{'innodb_sem_waits'} += 1;
+           $status{'innodb_sem_wait_time_ms'} += $self->tonum($row[9]) * 1000;
+        }
+
         # TRANSACTIONS
         elsif ($line =~ m/Trx id counter/) {
             # The beginning of the TRANSACTIONS section: start counting
@@ -465,7 +473,8 @@ my @types = (
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 129 - 132
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 133 - 136
     'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 137 - 140
-    'Counter64', 'Counter64', 'Counter64',                 # 141 - 143
+    'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 141 - 144
+    'Counter64',                                           # 145 - 145
 );
 
 my @newkeys = (
@@ -540,7 +549,8 @@ my @newkeys = (
     'myAdaptiveHashMemory',       'myPageHashMemory',            # 137 - 138
     'myDictionaryCacheMemory',    'myFileSystemMemory',          # 139 - 140
     'myLockSystemMemory',         'myRecoverySystemMemory',      # 141 - 142
-    'myThreadHashMemory',                                        # 143 - 143
+    'myThreadHashMemory',         'myInnoDBSemWaits',            # 143 - 144
+    'myInnoDBSemWaitTime',                                       # 145 - 145
 );
 
 my @oldkeys = (
@@ -615,7 +625,8 @@ my @oldkeys = (
     'adaptive_hash_memory',       'page_hash_memory',              # 137 - 138
     'dictionary_cache_memory',    'file_system_memory',            # 139 - 140
     'lock_system_memory',         'recovery_system_memory',        # 141 - 142
-    'thread_hash_memory',                                          # 143 - 143
+    'thread_hash_memory',         'innodb_sem_waits',              # 143 - 144
+    'innodb_sem_wait_time_ms',                                     # 145 - 145
 );
 
 run() unless caller();

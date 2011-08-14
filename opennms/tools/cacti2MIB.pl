@@ -163,6 +163,8 @@
         'lock_system_memory'        => {mib => 'myLockSystemMemory',            order => 141, type => 'Gauge64'},
         'recovery_system_memory'    => {mib => 'myRecoverySystemMemory',        order => 142, type => 'Gauge64'},
         'thread_hash_memory'        => {mib => 'myThreadHashMemory',            order => 143, type => 'Gauge64'},
+        'innodb_sem_waits'          => {mib => 'myInnoDBSemWaits',              order => 144, type => 'Counter64'},
+        'innodb_sem_wait_time_ms'   => {mib => 'myInnoDBSemWaitTime',           order => 145, type => 'Counter64'},
     },
     startoid => '.1.3.6.1.4.1.20267.200.1',
 }
