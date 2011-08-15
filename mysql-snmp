@@ -23,7 +23,7 @@
 
 use strict;
 
-my $VERSION = "v1.1_01";
+my $VERSION = "v1.2_01";
 $VERSION = eval $VERSION;
 
 ## Packages ##

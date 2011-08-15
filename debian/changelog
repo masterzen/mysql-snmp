@@ -1,3 +1,13 @@
+mysql-snmp (1.2-1) unstable; urgency=low
+
+  * new version
+  * some new graphs (innodb row lock times, innodb sem times, key buffer 
+  usage)
+  * renamed all mysql-agent to mysql-snmp (thanks to Robin Bowes)
+  * activate process list fetching with --procs (thanks to Robin Bowes)
+
+ -- brice <brice+debian@daysofwonder.com>  Mon, 15 Aug 2011 17:55:37 +0200
+
 mysql-snmp (1.0-1) unstable; urgency=low
 
   * new upstream version

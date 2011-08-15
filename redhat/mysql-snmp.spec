@@ -1,5 +1,5 @@
 Name:           mysql-snmp
-Version:        1.1
+Version:        1.2
 Release:        1%{?dist}
 Summary:        SNMP monitoring agent for MySQL
 
@@ -13,7 +13,7 @@ BuildArch:      noarch
 Requires:       perl(DBI), perl(DBD::mysql) >= 1.0, perl(Unix::Syslog)
 Requires:       perl(SNMP), perl(NetSNMP::OID), perl(NetSNMP::agent), perl(NetSNMP::ASN)
 Requires:       perl(NetSNMP::agent::default_store), perl(NetSNMP::default_store)
-Requires:       net-snmp >= 5.4.2
+Requires:       net-snmp >= 5.4.3
 Obsoletes:      mysql-agent
 
 %description
@@ -53,6 +53,8 @@ install -m 644 MYSQL-SERVER-MIB.txt ${RPM_BUILD_ROOT}%{_datadir}/snmp/mibs
 %{_datadir}/snmp/mibs/*
 
 %changelog
+* Wed Feb 17 2011 Brice Figureau <brice+debian@daysofwonder.com> - 1.2
+v1.2 release
 * Wed Feb 17 2010 Robin Bowes <rpmbuild@yo61.net> - 1.0
 v1.0 release
 * Mon Nov 16 2009 Robin Bowes <rpmbuild@yo61.net> - 1.0rc2-1
