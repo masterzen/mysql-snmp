@@ -153,6 +153,8 @@
   <mibObj oid=".1.3.6.1.4.1.20267.200.1.146" instance="0" alias="myKeyBufBytsUnflshd" type="Gauge64" />
   <mibObj oid=".1.3.6.1.4.1.20267.200.1.147" instance="0" alias="myKeyBufBytesUsed" type="Gauge64" />
   <mibObj oid=".1.3.6.1.4.1.20267.200.1.148" instance="0" alias="myKeyBufferSize" type="Gauge64" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.149" instance="0" alias="myInnoDBRowLockTime" type="Counter64" />
+  <mibObj oid=".1.3.6.1.4.1.20267.200.1.150" instance="0" alias="myInnoDBRowLockWats" type="Counter64" />
 </group>
 
 <systemDef name="Net-Snmp">

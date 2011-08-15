@@ -475,6 +475,7 @@ my @types = (
     'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 137 - 140
     'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 141 - 144
     'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 145 - 148
+    'Counter64', 'Counter64',                              # 149 - 150
 );
 
 my @newkeys = (
@@ -552,6 +553,7 @@ my @newkeys = (
     'myThreadHashMemory',         'myInnoDBSemWaits',            # 143 - 144
     'myInnoDBSemWaitTime',        'myKeyBufBytesUnflushed',      # 145 - 146
     'myKeyBufBytesUsed',          'myKeyBufferSize',             # 147 - 148
+    'myInnoDBRowLockTime',        'myInnoDBRowLockWaits',        # 149 - 150
 );
 
 my @oldkeys = (
@@ -629,6 +631,7 @@ my @oldkeys = (
     'thread_hash_memory',         'innodb_sem_waits',              # 143 - 144
     'innodb_sem_wait_time_ms',    'key_buf_bytes_unflushed',       # 145 - 146
     'key_buf_bytes_used',         'key_buffer_size',               # 147 - 148
+    'Innodb_row_lock_time',       'Innodb_row_lock_waits',         # 149 - 150
 );
 
 run() unless caller();

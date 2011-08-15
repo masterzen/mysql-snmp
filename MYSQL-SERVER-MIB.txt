@@ -1260,5 +1260,20 @@ myKeyBufferSize OBJECT-TYPE
     "Size of the Key Buffer"
     ::= { myStatus 148 }
 
+myInnoDBRowLockTime OBJECT-TYPE
+    SYNTAX	mySQLUnsigned64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Total time (ms) spent in acquiring row locks"
+    ::= { myStatus 149 }
+
+myInnoDBRowLockWaits OBJECT-TYPE
+    SYNTAX	mySQLUnsigned64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "The number of times a row lock had to be waited for"
+    ::= { myStatus 150 }
 
 END

@@ -168,6 +168,8 @@
         'key_buf_bytes_unflushed'   => {mib => 'myKeyBufBytesUnflushed',        order => 146, type => 'Gauge64'},
         'key_buf_bytes_used'        => {mib => 'myKeyBufBytesUsed',             order => 147, type => 'Gauge64'},
         'key_buffer_size'           => {mib => 'myKeyBufferSize',               order => 148, type => 'Gauge64'},
+        'Innodb_row_lock_time'      => {mib => 'myInnoDBRowLockTime',           order => 149, type => 'Counter64'},
+        'Innodb_row_lock_waits'     => {mib => 'myInnoDBRowLockWaits',          order => 150, type => 'Counter64'},
     },
     startoid => '.1.3.6.1.4.1.20267.200.1',
 }
