@@ -28,6 +28,12 @@
 # this program; if not, write to the Free Software Foundation, Inc., 59 Temple
 # Place, Suite 330, Boston, MA  02111-1307  USA.
 
+# notes:
+# data_source_type_id = 1 = "GAUGE"
+# data_source_type_id = 2 = "COUNTER"
+# data_source_type_id = 3 = "DERIVE"
+# data_source_type_id = 4 = "ABSOLUTE"
+
 use Data::Dumper;
 use strict;
 use warnings FATAL => 'all';
