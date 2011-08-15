@@ -1236,5 +1236,29 @@ myInooDBSemWaitTime OBJECT-TYPE
     "Total time innodb waited for semaphores"
     ::= { myStatus 145 }
 
+myKeyBufBytesUnflushed OBJECT-TYPE
+    SYNTAX	mySQLUnsigned64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Key Buffer bytes still unflushed"
+    ::= { myStatus 146 }
+
+myKeyBufBytesUsed OBJECT-TYPE
+    SYNTAX	mySQLUnsigned64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Key Buffer used in bytes"
+    ::= { myStatus 147 }
+
+myKeyBufferSize OBJECT-TYPE
+    SYNTAX	mySQLUnsigned64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Size of the Key Buffer"
+    ::= { myStatus 148 }
+
 
 END

@@ -474,7 +474,7 @@ my @types = (
     'Gauge32',   'Gauge32',   'Gauge32',   'Gauge32',      # 133 - 136
     'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 137 - 140
     'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 141 - 144
-    'Counter64',                                           # 145 - 145
+    'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 145 - 148
 );
 
 my @newkeys = (
@@ -550,7 +550,8 @@ my @newkeys = (
     'myDictionaryCacheMemory',    'myFileSystemMemory',          # 139 - 140
     'myLockSystemMemory',         'myRecoverySystemMemory',      # 141 - 142
     'myThreadHashMemory',         'myInnoDBSemWaits',            # 143 - 144
-    'myInnoDBSemWaitTime',                                       # 145 - 145
+    'myInnoDBSemWaitTime',        'myKeyBufBytesUnflushed',      # 145 - 146
+    'myKeyBufBytesUsed',          'myKeyBufferSize',             # 147 - 148
 );
 
 my @oldkeys = (
@@ -626,7 +627,8 @@ my @oldkeys = (
     'dictionary_cache_memory',    'file_system_memory',            # 139 - 140
     'lock_system_memory',         'recovery_system_memory',        # 141 - 142
     'thread_hash_memory',         'innodb_sem_waits',              # 143 - 144
-    'innodb_sem_wait_time_ms',                                     # 145 - 145
+    'innodb_sem_wait_time_ms',    'key_buf_bytes_unflushed',       # 145 - 146
+    'key_buf_bytes_used',         'key_buffer_size',               # 147 - 148
 );
 
 run() unless caller();
@@ -654,6 +656,13 @@ sub max {
     my ($a, $b) = @_;
     return $a if $a > $b;
     return $b;
+}
+
+sub bigint($) {
+    my $str = shift;
+    return Math::BigInt->bzero() if !$str;
+    return new Math::BigInt $1 if $str =~ m/(\d+)/;
+    return Math::BigInt->bzero();
 }
 
 # This function has been translated from PHP to Perl from the
@@ -807,6 +816,8 @@ sub fetch_mysql_data {
             }
         }
 
+        $status{'key_buf_bytes_used'} = bigint($status{'key_buffer_size'})->bsub(bigint($status{'Key_blocks_unused'})->bmul($status{'key_cache_block_size'}));
+        $status{'key_buf_bytes_unflushed'} = bigint($status{'Key_blocks_not_flushed'})->bmul(bigint($status{'key_cache_block_size'}));
 
         # Get SHOW PROCESSLIST and aggregate it by state, then add it to the array
         # too.

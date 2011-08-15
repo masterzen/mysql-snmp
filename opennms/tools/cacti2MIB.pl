@@ -165,6 +165,9 @@
         'thread_hash_memory'        => {mib => 'myThreadHashMemory',            order => 143, type => 'Gauge64'},
         'innodb_sem_waits'          => {mib => 'myInnoDBSemWaits',              order => 144, type => 'Counter64'},
         'innodb_sem_wait_time_ms'   => {mib => 'myInnoDBSemWaitTime',           order => 145, type => 'Counter64'},
+        'key_buf_bytes_unflushed'   => {mib => 'myKeyBufBytesUnflushed',        order => 146, type => 'Gauge64'},
+        'key_buf_bytes_used'        => {mib => 'myKeyBufBytesUsed',             order => 147, type => 'Gauge64'},
+        'key_buffer_size'           => {mib => 'myKeyBufferSize',               order => 148, type => 'Gauge64'},
     },
     startoid => '.1.3.6.1.4.1.20267.200.1',
 }
