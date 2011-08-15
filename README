@@ -22,16 +22,8 @@ This software is released under the GPL v2.
 REQUIREMENTS
 ============
 
-This package requires Net-SNMP version 5.4.2 or better.
-
-It also to be noted that the patches I provided that was included in 5.4.2 wasn't
-completely applied, thus counter64 exported from a perl subagent are broken.
-
-It means that for the moment the only way to have correct 64 bits mib objects is 
-to apply the following patch to net-snmp:
-http://sourceforge.net/tracker/?func=detail&aid=2890931&group_id=12694&atid=312694
-
-Note: this patch is now included upstream, but not yet available in a tarball version.
+This package requires Net-SNMP version 5.4.3 or better. Previous versions have bugs preventing
+returning 64 bits MIBs objects correctly from a perl agentX.
 
 INSTALL
 =======
@@ -65,6 +57,9 @@ Configure net-snmp
 Add:
 master agentx
 to /etc/snmp/snmpd.conf, and restart snmpd
+Make sure the mysql-snmp agent is able to open the agentX socket (permissions
+and location of said socket can be managed with the snmpd.conf agentXPerms
+directive).
 
 Configure mysql-snmp
 --------------------
@@ -105,7 +100,8 @@ that can be used to let opennms graph the value reported by this agent.
 datacollection-config.xml
 -------------------------
 
-Add the content of opennms/mysql.datacollection-config.xml
+Add the content of opennms/mysql.datacollection-config.xml to
+your datacollection-config.xml file.
 
 Then add this group to your hosts:
 <systemDef name="Net-Snmp">
