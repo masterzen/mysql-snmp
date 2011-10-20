@@ -978,10 +978,10 @@ sub my_snmp_handler {
         }
 
         if ($mode == MODE_GETNEXT) {
-            if ($oid < $lowestOid) {
+            if (NetSNMP::OID::compare($oid, $lowestOid) < 0) {
                 set_value($request, $lowestOid, $request_info);
             }
-            elsif ($oid < $highestOid) #request is somewhere in our range, so return first one after it
+            elsif (NetSNMP::OID::compare($oid, $highestOid) <= 0) #request is somewhere in our range, so return first one after it
             {
                 my $lasti = 0;
                 my $i = 0;
@@ -991,10 +991,14 @@ sub my_snmp_handler {
                 do {
                     $oidToUse = $ks[$i];
                     $i++;
-                } while (NetSNMP::OID::compare($oid, $oidToUse) > -1 and $i <= scalar @ks);
+                } while (NetSNMP::OID::compare($oid, $oidToUse) > -1 and $i < scalar @ks);
 
                 #got one to return
                 if (defined $oidToUse) {
+                    if (NetSNMP::OID::compare($oid, $oidToUse) == 0) {
+                        dolog(LOG_DEBUG, "GETNEXT $oid == $oidToUse, no next, returning nothing"); if ($opt{verbose})
+                        next;
+		    }                    
                     dolog(LOG_DEBUG, "Next oid to $oid is $oidToUse") if ($opt{verbose});
                     while (!set_value($request, $oidToUse, $request_info)) {
                         # got not value, we need to get the next oid
