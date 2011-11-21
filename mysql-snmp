@@ -996,9 +996,9 @@ sub my_snmp_handler {
                 #got one to return
                 if (defined $oidToUse) {
                     if (NetSNMP::OID::compare($oid, $oidToUse) == 0) {
-                        dolog(LOG_DEBUG, "GETNEXT $oid == $oidToUse, no next, returning nothing"); if ($opt{verbose})
+                        dolog(LOG_DEBUG, "GETNEXT $oid == $oidToUse, no next, returning nothing") if ($opt{verbose});
                         next;
-		    }                    
+                    }
                     dolog(LOG_DEBUG, "Next oid to $oid is $oidToUse") if ($opt{verbose});
                     while (!set_value($request, $oidToUse, $request_info)) {
                         # got not value, we need to get the next oid
