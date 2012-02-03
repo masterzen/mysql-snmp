@@ -25,7 +25,7 @@
 ### END INIT INFO
 
 PATH=/sbin:/bin:/usr/sbin:/usr/bin
-DAEMON=/usr/sbin/mysql-smnp
+DAEMON=/usr/sbin/mysql-snmp
 DAEMON2="/usr/bin/perl"
 NAME=mysql-snmp
 DESC="Mysql SNMP Agent"
