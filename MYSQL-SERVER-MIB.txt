@@ -1,7 +1,7 @@
 -- MySQL Server: SNMP Subagent
 -- 
 -- Copyright (C) 2008,2009 Brice Figureau
--- Copyright (C) 2008,2009 Days of Wonder, Inc.
+-- Copyright (C) 2008-2012 Days of Wonder, Inc.
 --
 -- This program is free software; you can redistribute it and/or
 -- modify it under the terms of the GNU General Public License
@@ -21,23 +21,18 @@
 MYSQL-SERVER-MIB DEFINITIONS ::= BEGIN
 
 IMPORTS
-    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE,
-    enterprises, Counter32, Gauge32,
-    IpAddress, Unsigned32, Counter64
+    MODULE-IDENTITY, OBJECT-TYPE,
+    enterprises, Counter32, Gauge32, Counter64
     FROM SNMPv2-SMI
 
-    TEXTUAL-CONVENTION, DisplayString, TimeStamp,
-    TruthValue
+    TEXTUAL-CONVENTION
     FROM SNMPv2-TC
 
-    CounterBasedGauge64
-    FROM HCNUM-TC
-
-    MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+    MODULE-COMPLIANCE, OBJECT-GROUP
     FROM SNMPv2-CONF;
 
 mySQL		MODULE-IDENTITY
-    LAST-UPDATED "201108150000Z"	-- Aug. 15, 2011
+    LAST-UPDATED "201211220000Z"	-- Nov. 22, 2012
     ORGANIZATION "Days of Wonder, Inc."
     CONTACT-INFO
     "Days of Wonder
@@ -47,20 +42,28 @@ mySQL		MODULE-IDENTITY
     DESCRIPTION
     "This MIB describes a MySQL Database Server counters."
 
+    REVISION "201211220000Z"	    -- Nov. 22, 2012
+    DESCRIPTION
+    "Removed errors and warnings."
+
+    REVISION "201108150000Z"	    -- Aug. 15, 2011
+    DESCRIPTION
+    "Added latest innodb values."
+
     REVISION "200807140000Z"	    -- Jul. 14, 2008
     DESCRIPTION
     "The original version of this MIB."
-    ::= { enterprises 20267 200 }
+
+    ::= { enterprises daysofwonder(20267) 200 }
 
 -- Current MySQL core MIB entries
---  myStatus		OBJECT IDENTIFIER ::= { mySQL 1 }
 
-mySQLUnsigned64 ::= TEXTUAL-CONVENTION
+MYSQLUnsigned64 ::= TEXTUAL-CONVENTION
+		DISPLAY-HINT "d"
     STATUS  current
     DESCRIPTION
     "A 64 bits unsigned (which doesn't exist in SMIv2) containing any unsigned 64 bits
     integer number. It is defined as a Counter64 but doesn't carry the counter semantic"
-    
     SYNTAX  Counter64
 
 myStatus		OBJECT IDENTIFIER ::= { mySQL 1 }
@@ -553,7 +556,7 @@ myConnections OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Number of clients connected"
     ::= { myStatus 60 }
 
 mySlaveRunning OBJECT-TYPE
@@ -561,7 +564,7 @@ mySlaveRunning OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Number of slaves connected"
     ::= { myStatus 61 }
 
 mySlaveStopped OBJECT-TYPE
@@ -569,7 +572,7 @@ mySlaveStopped OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Number of slaves stopped"
     ::= { myStatus 62 }
 
 mySlaveRetriedTransactions OBJECT-TYPE
@@ -577,7 +580,7 @@ mySlaveRetriedTransactions OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Number of transaction retried by slaves"
     ::= { myStatus 63 }
 
 mySlaveLag OBJECT-TYPE
@@ -585,7 +588,7 @@ mySlaveLag OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Global slave time lag"
     ::= { myStatus 64 }
 
 mySlaveOpenTempTables OBJECT-TYPE
@@ -593,7 +596,7 @@ mySlaveOpenTempTables OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Number of temporary tables opened by slave"
     ::= { myStatus 65 }
 
 myQcacheFreeBlocks OBJECT-TYPE
@@ -665,7 +668,7 @@ myQueryCacheSize OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Query cache size"
     ::= { myStatus 74 }
 
 myQuestions OBJECT-TYPE
@@ -905,7 +908,7 @@ myRelayLogSpace OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Relay log free space"
     ::= { myStatus 104 }
 
 myBinlogCacheSize OBJECT-TYPE
@@ -921,7 +924,7 @@ myBinlogCacheDiskUse OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Binlog cache disk use"
     ::= { myStatus 106 }
 
 myBinlogCacheUse OBJECT-TYPE
@@ -929,7 +932,7 @@ myBinlogCacheUse OBJECT-TYPE
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
-    ""
+    "Binlog cache use"
     ::= { myStatus 107 }
 
 myBinaryLogSpace OBJECT-TYPE
@@ -1069,7 +1072,7 @@ myStateOther OBJECT-TYPE
     ::= { myStatus 124 }
 
 myAdditionalPoolAlloc OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1077,7 +1080,7 @@ myAdditionalPoolAlloc OBJECT-TYPE
     ::= { myStatus 125 }
 
 myTotalMemAlloc OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1165,7 +1168,7 @@ myIBufFreeCells OBJECT-TYPE
     ::= { myStatus 136 }
 
 myAdaptiveHashMemory OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1173,7 +1176,7 @@ myAdaptiveHashMemory OBJECT-TYPE
     ::= { myStatus 137 }
 
 myPageHashMemory OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1181,7 +1184,7 @@ myPageHashMemory OBJECT-TYPE
     ::= { myStatus 138 }
 
 myDictionaryCacheMemory OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1189,7 +1192,7 @@ myDictionaryCacheMemory OBJECT-TYPE
     ::= { myStatus 139 }
 
 myFileSystemMemory OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1197,7 +1200,7 @@ myFileSystemMemory OBJECT-TYPE
     ::= { myStatus 140 }
 
 myLockSystemMemory OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1205,7 +1208,7 @@ myLockSystemMemory OBJECT-TYPE
     ::= { myStatus 141 }
 
 myRecoverySystemMemory OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1213,7 +1216,7 @@ myRecoverySystemMemory OBJECT-TYPE
     ::= { myStatus 142 }
 
 myThreadHashMemory OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1237,7 +1240,7 @@ myInooDBSemWaitTime OBJECT-TYPE
     ::= { myStatus 145 }
 
 myKeyBufBytesUnflushed OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1245,7 +1248,7 @@ myKeyBufBytesUnflushed OBJECT-TYPE
     ::= { myStatus 146 }
 
 myKeyBufBytesUsed OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1253,7 +1256,7 @@ myKeyBufBytesUsed OBJECT-TYPE
     ::= { myStatus 147 }
 
 myKeyBufferSize OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1261,7 +1264,7 @@ myKeyBufferSize OBJECT-TYPE
     ::= { myStatus 148 }
 
 myInnoDBRowLockTime OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
@@ -1269,11 +1272,189 @@ myInnoDBRowLockTime OBJECT-TYPE
     ::= { myStatus 149 }
 
 myInnoDBRowLockWaits OBJECT-TYPE
-    SYNTAX	mySQLUnsigned64
+    SYNTAX	MYSQLUnsigned64
     MAX-ACCESS	read-only
     STATUS	current
     DESCRIPTION
     "The number of times a row lock had to be waited for"
     ::= { myStatus 150 }
+
+-- conformance information
+
+mySQLMIBConformance OBJECT IDENTIFIER ::= { mySQL 2 }
+
+mySQLMIBCompliances OBJECT IDENTIFIER ::= { mySQLMIBConformance 1 }
+mySQLMIBGroups      OBJECT IDENTIFIER ::= { mySQLMIBConformance 2 }
+
+-- compliance statements
+
+mySQLMIBCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+    "The compliance statement for SNMPv2 entities which implement MYSQL."
+    MODULE  -- this module
+    MANDATORY-GROUPS { mySQLGroup }
+    ::= { mySQLMIBCompliances 1 }
+
+-- units of conformance
+
+mySQLGroup OBJECT-GROUP
+    OBJECTS   { 
+			myKeyReadRequests,
+			myKeyReads,
+			myKeyWriteRequests,
+			myKeyWrites,
+			myHistoryList,
+			myInnodbTransactions,
+			myReadViews,
+			myCurrentTransactions,
+			myLockedTransactions,
+			myActiveTransactions,
+			myPoolSize,
+			myFreePages,
+			myDatabasePages,
+			myModifiedPages,
+			myPagesRead,
+			myPagesCreated,
+			myPagesWritten,
+			myFileFsyncs,
+			myFileReads,
+			myFileWrites,
+			myLogWrites,
+			myPendingAIOLogIOs,
+			myPendingAIOSyncIOs,
+			myPendingBufPoolFlushes,
+			myPendingChkpWrites,
+			myPendingIbufAIOReads,
+			myPendingLogFlushes,
+			myPendingLogWrites,
+			myPendingNormalAIOReads,
+			myPendingNormalAIOWrites,
+			myIbufInserts,
+			myIbufMerged,
+			myIbufMerges,
+			mySpinWaits,
+			mySpinRounds,
+			myOsWaits,
+			myRowsInserted,
+			myRowsUpdated,
+			myRowsDeleted,
+			myRowsRead,
+			myTableLocksWaited,
+			myTableLocksImmediate,
+			mySlowQueries,
+			myOpenFiles,
+			myOpenTables,
+			myOpenedTables,
+			myInnodbOpenFiles,
+			myOpenFilesLimit,
+			myTableCache,
+			myAbortedClients,
+			myAbortedConnects,
+			myMaxUsedConnections,
+			mySlowLaunchThreads,
+			myThreadsCached,
+			myThreadsConnected,
+			myThreadsCreated,
+			myThreadsRunning,
+			myMaxConnections,
+			myThreadCacheSize,
+			myConnections,
+			mySlaveRunning,
+			mySlaveStopped,
+			mySlaveRetriedTransactions,
+			mySlaveLag,
+			mySlaveOpenTempTables,
+			myQcacheFreeBlocks,
+			myQcacheFreeMemory,
+			myQcacheHits,
+			myQcacheInserts,
+			myQcacheLowmemPrunes,
+			myQcacheNotCached,
+			myQcacheQueriesInCache,
+			myQcacheTotalBlocks,
+			myQueryCacheSize,
+			myQuestions,
+			myComUpdate,
+			myComInsert,
+			myComSelect,
+			myComDelete,
+			myComReplace,
+			myComLoad,
+			myComUpdateMulti,
+			myComInsertSelect,
+			myComDeleteMulti,
+			myComReplaceSelect,
+			mySelectFullJoin,
+			mySelectFullRangeJoin,
+			mySelectRange,
+			mySelectRangeCheck,
+			mySelectScan,
+			mySortMergePasses,
+			mySortRange,
+			mySortRows,
+			mySortScan,
+			myCreatedTmpTables,
+			myCreatedTmpDiskTables,
+			myCreatedTmpFiles,
+			myBytesSent,
+			myBytesReceived,
+			myInnodbLogBufferSize,
+			myUnflushedLog,
+			myLogBytesFlushed,
+			myLogBytesWritten,
+			myRelayLogSpace,
+			myBinlogCacheSize,
+			myBinlogCacheDiskUse,
+			myBinlogCacheUse,
+			myBinaryLogSpace,
+			myStateClosingTables,
+			myStateCopyingToTmpTable,
+			myStateEnd,
+			myStateFreeingItems,
+			myStateInit,
+			myStateLocked,
+			myStateLogin,
+			myStatePreparing,
+			myStateReadingFromNet,
+			myStateSendingData,
+			myStateSortingResult,
+			myStateStatistics,
+			myStateUpdating,
+			myStateWritingToNet,
+			myStateNone,
+			myStateOther,
+			myAdditionalPoolAlloc,
+			myTotalMemAlloc,
+			myHashIndexCellsTotal,
+			myHashIndexCellsUsed,
+			myInnoDBLockStructs,
+			myInnoDBLockWaitSecs,
+			myInnoDBTablesInUse,
+			myInnoDBLockedTables,
+			myUncheckpointedBytes,
+			myIBufCellCount,
+			myIBufUsedCells,
+			myIBufFreeCells,
+			myAdaptiveHashMemory,
+			myPageHashMemory,
+			myDictionaryCacheMemory,
+			myFileSystemMemory,
+			myLockSystemMemory,
+			myRecoverySystemMemory,
+			myThreadHashMemory,
+			myInnoDBSemWaits,
+			myInooDBSemWaitTime,
+			myKeyBufBytesUnflushed,
+			myKeyBufBytesUsed,
+			myKeyBufferSize,
+			myInnoDBRowLockTime,
+			myInnoDBRowLockWaits
+    }
+    STATUS    current
+    DESCRIPTION
+     "The group of objects providing for management of MYSQL entities."
+    ::= { mySQLMIBGroups 1 }
+
 
 END
