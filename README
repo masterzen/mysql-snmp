@@ -75,7 +75,7 @@ On all platform, the configuration is done with command line arguments:
 
 -m|--master             check master
 -s|--slave              check slave
--b|--heartbeat DB.TABLE table for maatkit mk-heartbeat 
+-b|--heartbeat DB.TABLE table for Percona Toolkit pt-heartbeat 
 --oid OID               registering OID
 -l|--process-list|--procs
                         enable the MySQL process list
