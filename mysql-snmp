@@ -735,7 +735,7 @@ sub fetch_mysql_data {
 
                 # Check replication heartbeat, if present.
                 if ( $opt{heartbeat} ne '' ) {
-                    my $row2 = $dbh->selectrow_arrayref("SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1) FROM $opt{heartbeat} WHERE id = 1");
+                    my $row2 = $dbh->selectrow_arrayref("SELECT GREATEST(0, UNIX_TIMESTAMP() - UNIX_TIMESTAMP(ts) - 1) FROM $opt{heartbeat} WHERE server_id != \@\@SERVER_ID ORDER BY ts DESC LIMIT 1");
                     $status{'slave_lag'} = $row2->[0];
                 }
 

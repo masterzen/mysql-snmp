@@ -70,12 +70,12 @@ On all platform, the configuration is done with command line arguments:
 -h|--host HOST          connect to mysql HOST
 -P|--port PORT          port to connect to (default 3306)
 -u|--user DBUSER        use DBUSER as user to connect to mysql
--p|--passwordi DBPASS   use DBPASS as password to connect to mysql
+-p|--password DBPASS    use DBPASS as password to connect to mysql
 -c|--config FILE        read MySQL configuration from FILE
 
 -m|--master             check master
 -s|--slave              check slave
--b|--heartbeat DB.TABLE table for maatkit mk-heartbeat 
+-b|--heartbeat DB.TABLE table for Percona Toolkit pt-heartbeat 
 --oid OID               registering OID
 -l|--process-list|--procs
                         enable the MySQL process list

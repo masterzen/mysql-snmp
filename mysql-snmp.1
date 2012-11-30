@@ -76,7 +76,9 @@ adds SNMP counters for slaves
 
 .TP
 .B \-b,\-\-heartbeat DB.TABLE 
-compute slave lag with the maatkit mk-heartbeat stamp table.
+compute slave lag with the Percona Toolkit pt-heartbeat stamp
+table. (Note that this option has no effect if \-\-slave is not also
+specified.)
 
 .TP
 .B \-\-oid OID
