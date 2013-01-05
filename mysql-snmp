@@ -1038,7 +1038,7 @@ sub run
         'master|m!',
         'slave|s!',
         'innodb|i!',
-        'oid|o',
+        'oid|o=s',
         'procs|l|process-list!',
         'refresh|r=i',
         'daemon_pid|daemon-pid=s',
