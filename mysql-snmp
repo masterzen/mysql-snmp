@@ -119,6 +119,8 @@ sub parse_innodb_status {
     my @os_waits;
     my $txn_seen = 0;
     my $merged_op_seen = 0;
+    my $discarded_op_seen = 0;
+    my $individual_buffer_pool_info_seen = 0;
 
     foreach my $line (@$lines) {
         my @row = split(/ +/, $line);
@@ -129,11 +131,29 @@ sub parse_innodb_status {
             push(@spin_rounds, $self->tonum($row[5]));
             push(@os_waits,    $self->tonum($row[8]));
         }
-        elsif ($line =~ m/RW-shared spins/) {
+        elsif($line =~ m/RW-shared spins \d+, OS waits \d+; RW-excl/) {
+            # previous mysql versions had this line
+            # RW-shared spins 1956750, OS waits 199142; RW-excl spins 316353, OS waits 185734
             push(@spin_waits, $self->tonum($row[2]));
             push(@spin_waits, $self->tonum($row[8]));
             push(@os_waits,   $self->tonum($row[5]));
             push(@os_waits,   $self->tonum($row[11]));
+        }
+        elsif ($line =~ m/RW-shared spins \d+, rounds/) {
+            # newer mysql versions split this line in two
+            # RW-shared spins 38794, rounds 798644, OS waits 18015
+            # RW-excl spins 27732, rounds 910515, OS waits 23321
+            push(@spin_waits,  $self->tonum($row[2]));
+            push(@spin_rounds, $self->tonum($row[4]));
+            push(@os_waits,    $self->tonum($row[7]));
+        }
+        elsif ($line =~ m/^RW-excl spins/) {
+            # newer mysql versions split this line in two
+            # RW-shared spins 38794, rounds 798644, OS waits 18015
+            # RW-excl spins 27732, rounds 910515, OS waits 23321
+            push(@spin_waits,  $self->tonum($row[2]));
+            push(@spin_rounds, $self->tonum($row[4]));
+            push(@os_waits,    $self->tonum($row[7]));
         }
         elsif ($line =~ /seconds the semaphore:/) {
            # --Thread 907205 has waited at handler/ha_innodb.cc line 7156 for 1.00 seconds the semaphore:
@@ -195,9 +215,15 @@ sub parse_innodb_status {
             $status{'file_writes'} = $self->tonum($row[4]);
             $status{'file_fsyncs'} = $self->tonum($row[8]);
         }
-        elsif ($line =~ m/Pending normal aio/) {
+        elsif ($line =~ m/Pending normal aio: \d+, aio/) {
+            # Pending normal aio reads: 0, aio writes: 0,
             $status{'pending_normal_aio_reads'}  = $self->tonum($row[4]);
             $status{'pending_normal_aio_writes'} = $self->tonum($row[7]);
+        }
+        elsif ($line =~ m/Pending normal aio: \d+ \[\d+, \d+, \d+, \d+\]/) {
+            # Pending normal aio reads: 0 [0, 0, 0, 0] , aio writes: 0 [0, 0, 0, 0] ,
+            $status{'pending_normal_aio_reads'}  = $self->tonum($row[4]);
+            $status{'pending_normal_aio_writes'} = $self->tonum($row[12]);
         }
         elsif ($line =~ m/ibuf aio reads/) {
             $status{'pending_ibuf_aio_reads'} = $self->tonum($row[4]);
@@ -239,10 +265,18 @@ sub parse_innodb_status {
            # insert 0, delete mark 0, delete 0
            $merged_op_seen = 1;
         }
-        elsif ($merged_op_seen && $line =~ m/ insert \d+, delete mark/) {
-           #merged operations:
+        elsif ($line =~ m/discarded operations:/) {
+           #discarded operations:
            # insert 0, delete mark 0, delete 0
-           $status{'ibuf_inserts'} = $self->tonum($1);
+           $discarded_op_seen = 1;
+        }
+        elsif ($merged_op_seen && !$discarded_op_seen && $line =~ m/ insert \d+, delete mark/) {
+           # we want merged operations, not discarded operations (same pattern)
+           # merged operations:
+           #  insert 661027, delete mark 1093738, delete 6140
+           # discarded operations:
+           #  insert 0, delete mark 0, delete 0
+           $status{'ibuf_inserts'} = $self->tonum($row[2]);
         }
         elsif ($line =~ m/^Hash table size /) {
            # In some versions of InnoDB, the used cells is omitted.
@@ -276,6 +310,9 @@ sub parse_innodb_status {
            $status{'last_checkpoint'} = defined($row[4]) ? $self->make_bigint($row[3], $row[4]) : $self->tonum($row[3]);
         }
         # BUFFER POOL AND MEMORY
+        elsif ($line =~ m/^INDIVIDUAL BUFFER POOL INFO/) {
+           $individual_buffer_pool_info_seen = 1;
+        }
         elsif ($line =~ m/^Total memory allocated/) {
            # Total memory allocated 29642194944; in additional pool allocated 0
            $status{'total_mem_alloc'}       = $self->tonum($row[3]);
@@ -313,22 +350,24 @@ sub parse_innodb_status {
            #   innodb_io_pattern   0    (0 + 0)
            $status{'innodb_io_pattern_memory'} = $self->tonum($row[2]);
         }
-        elsif ($line =~ m/Buffer pool size /) {
+        elsif (!$individual_buffer_pool_info_seen && $line =~ m/Buffer pool size /) {
             # The " " after size is necessary to avoid matching the wrong line:
             # Buffer pool size        1769471
             # Buffer pool size, bytes 28991012864
             $status{'pool_size'} = $self->tonum($row[3]);
         }
-        elsif ($line =~ m/Free buffers/) {
+        elsif (!$individual_buffer_pool_info_seen && $line =~ m/Free buffers/) {
             $status{'free_pages'} = $self->tonum($row[2]);
         }
-        elsif ($line =~ m/Database pages/) {
+        elsif (!$individual_buffer_pool_info_seen && $line =~ m/^Database pages/) {
             $status{'database_pages'} = $self->tonum($row[2]);
         }
-        elsif ($line =~ m/Modified db pages/) {
+        elsif (!$individual_buffer_pool_info_seen && $line =~ m/Modified db pages/) {
             $status{'modified_pages'} = $self->tonum($row[3]);
         }
-        elsif ($line =~ m/Pages read/) {
+        elsif (!$individual_buffer_pool_info_seen && $line =~ m/Pages read \d+, created/) {
+            #Pages read 349569, created 140622, written 1614731
+            #Pages read ahead 0.00/s, evicted without access 0.00/s, Random read ahead 0.00/s
             $status{'pages_read'}    = $self->tonum($row[2]);
             $status{'pages_created'} = $self->tonum($row[4]);
             $status{'pages_written'} = $self->tonum($row[6]);
@@ -773,7 +812,7 @@ sub fetch_mysql_data {
         }
 
         # Get SHOW INNODB STATUS and extract the desired metrics from it.
-        if ($opt{innodb} && $status{'have_innodb'} eq 'YES') {
+        if ($opt{innodb}) { #mysql 5.6 has no 'have_innodb' status, latest percona monitoring tool uses 'show engines' and looks for innodb
             my $innodb_array = $dbh->selectall_arrayref("SHOW /*!50000 ENGINE*/ INNODB STATUS",{Slice => {}});
             my @lines = split("\n", $innodb_array->[0]{'Status'});
 
@@ -1023,7 +1062,7 @@ sub VersionMessage {
     print "mysql-snmp $VERSION by brice.figureau\@daysofwonder.com\n";
 }
 
-sub run 
+sub run
 {
     netsnmp_ds_set_boolean(NETSNMP_DS_APPLICATION_ID, NETSNMP_DS_AGENT_NO_ROOT_ACCESS, 1);
     my $agent = new NetSNMP::agent('Name' => 'mysql', 'AgentX' => 1);
@@ -1112,10 +1151,10 @@ __END__
 
 =head1 NAME
 
-    mysql-snmp - report mysql statistics via SNMP 
- 
+    mysql-snmp - report mysql statistics via SNMP
+
 =head1 SYNOPSIS
- 
+
     mysql-snmp [options]
 
     -h HOST, --host=HOST      connect to MySQL DB on HOST
