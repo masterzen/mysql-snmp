@@ -514,7 +514,10 @@ my @types = (
     'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 137 - 140
     'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 141 - 144
     'Counter64', 'Counter64', 'Counter64', 'Counter64',    # 145 - 148
-    'Counter64', 'Counter64',                              # 149 - 150
+    'Counter64', 'Counter64', 'String',    'Integer',      # 149 - 152
+    'Integer',   'String',    'String',    'String',       # 153 - 156
+    'String',    'String',    'Counter64', 'Counter64'     # 157 - 160
+
 );
 
 my @newkeys = (
@@ -593,6 +596,12 @@ my @newkeys = (
     'myInnoDBSemWaitTime',        'myKeyBufBytesUnflushed',      # 145 - 146
     'myKeyBufBytesUsed',          'myKeyBufferSize',             # 147 - 148
     'myInnoDBRowLockTime',        'myInnoDBRowLockWaits',        # 149 - 150
+    'myWsrepClusterStateUuid',    'myWsrepClusterConfId',        # 151 - 152
+    'myWsrepClusterSize',         'myWsrepClusterStatus',        # 153 - 154
+    'myWsrepReady',               'myWsrepConnected',            # 155 - 156
+    'myWsrepLocalStateComment',   'myWsrepFlowControlPaused',    # 157 - 158
+    'myWsrepReplicatedBytes',     'myWsrepReceivedBytes'         # 159 - 160
+
 );
 
 my @oldkeys = (
@@ -671,6 +680,12 @@ my @oldkeys = (
     'innodb_sem_wait_time_ms',    'key_buf_bytes_unflushed',       # 145 - 146
     'key_buf_bytes_used',         'key_buffer_size',               # 147 - 148
     'Innodb_row_lock_time',       'Innodb_row_lock_waits',         # 149 - 150
+    'wsrep_cluster_state_uuid',   'wsrep_cluster_conf_id',         # 151 - 152
+    'wsrep_cluster_size',         'wsrep_cluster_status',          # 153 - 154
+    'wsrep_ready',                'wsrep_connected',               # 155 - 156
+    'wsrep_local_state_comment',  'wsrep_flow_control_paused',     # 157 - 158
+    'wsrep_replicated_bytes',     'wsrep_received_bytes'           # 159 - 160
+
 );
 
 run() unless caller();
@@ -955,6 +970,9 @@ sub getASNType {
     }
     elsif ($type eq 'OID') {
         return ASN_OBJECT_ID;
+    }
+    elsif ($type eq 'Integer') {
+        return ASN_INTEGER;
     }
     return ASN_OCTET_STR;
 }
