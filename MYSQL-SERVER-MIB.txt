@@ -32,7 +32,7 @@ IMPORTS
     FROM SNMPv2-CONF;
 
 mySQL		MODULE-IDENTITY
-    LAST-UPDATED "201211220000Z"	-- Nov. 22, 2012
+    LAST-UPDATED "201403110000Z"	-- Mar. 11, 2014
     ORGANIZATION "Days of Wonder, Inc."
     CONTACT-INFO
     "Days of Wonder
@@ -41,6 +41,10 @@ mySQL		MODULE-IDENTITY
     USA"
     DESCRIPTION
     "This MIB describes a MySQL Database Server counters."
+
+    REVISION "201403110000Z"	    -- Mar. 3, 2014
+    DESCRIPTION
+    "Added support for some wsrep/galera data"
 
     REVISION "201211220000Z"	    -- Nov. 22, 2012
     DESCRIPTION
@@ -1279,6 +1283,88 @@ myInnoDBRowLockWaits OBJECT-TYPE
     "The number of times a row lock had to be waited for"
     ::= { myStatus 150 }
 
+myWsrepClusterStateUuid OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "UUID for the cluster"
+    ::= { myStatus 151 }
+
+myWsrepClusterConfId OBJECT-TYPE
+    SYNTAX	INTEGER
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "wsrep conf id for the cluster"
+    ::= { myStatus 152 }
+
+myWsrepClusterSize OBJECT-TYPE
+    SYNTAX	INTEGER
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of online nodes in the cluster"
+    ::= { myStatus 153 }
+
+myWsrepClusterStatus OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Cluster status"
+    ::= { myStatus 154 }
+
+myWsrepReady OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Node can accept SQL load"
+    ::= { myStatus 155 }
+
+myWsrepConnected OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Cluster connection status"
+    ::= { myStatus 156 }
+
+myWsrepLocalStateComment OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Description of local state"
+    ::= { myStatus 157 }
+
+myWsrepFlowControlPaused OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "indicates the fraction of time replication was paused since last SHOW
+    STATUS"
+    ::= { myStatus 158 }
+
+myWsrepReplicatedBytes OBJECT-TYPE
+    SYNTAX	Counter64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of bytes replicated"
+    ::= { myStatus 159 }
+
+myWsrepReceivedBytes OBJECT-TYPE
+    SYNTAX	Counter64
+    MAX-ACCESS	read-only
+    STATUS	current
+    DESCRIPTION
+    "Number of wsrep bytes received"
+    ::= { myStatus 160 }
+
+
 -- conformance information
 
 mySQLMIBConformance OBJECT IDENTIFIER ::= { mySQL 2 }
@@ -1449,8 +1535,19 @@ mySQLGroup OBJECT-GROUP
 			myKeyBufBytesUsed,
 			myKeyBufferSize,
 			myInnoDBRowLockTime,
-			myInnoDBRowLockWaits
-    }
+			myInnoDBRowLockWaits,
+            myWsrepClusterStateUuid,
+            myWsrepClusterConfId,
+            myWsrepClusterSize,
+            myWsrepClusterStatus,
+            myWsrepReady,
+            myWsrepConnected,
+            myWsrepLocalStateComment,
+            myWsrepFlowControlPaused,
+            myWsrepReplicatedBytes,
+            myWsrepReceivedBytes
+
+}
     STATUS    current
     DESCRIPTION
      "The group of objects providing for management of MYSQL entities."
