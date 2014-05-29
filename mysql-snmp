@@ -1104,7 +1104,7 @@ sub run
         'man',
         'usage',
         'verbose|v+',
-        'version|V' => sub {VersionMessage()},
+        'version|V' => sub {VersionMessage(); exit 0;},
     ) or pod2usage(-verbose => 0);
 
     pod2usage(-verbose => 0) if $opt{usage};
